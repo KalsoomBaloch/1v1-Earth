@@ -22,7 +22,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 export async function fetchQuestions(): Promise<TriviaQuestion[]> {
   try {
-    const res = await fetch('https://opentdb.com/api.php?amount=5&type=multiple');
+    const res = await fetch('https://opentdb.com/api.php?amount=5&type=multiple&difficulty=easy');
     const data = await res.json();
     if (data.response_code === 0 && data.results?.length) {
       return data.results.map((q: any) => {

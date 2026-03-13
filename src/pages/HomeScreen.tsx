@@ -4,12 +4,22 @@ import { detectCountry } from '@/lib/country';
 import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
-  const { playerId, countryCode, xp, setPlayer } = useGameState();
+  const { playerId, countryCode, xp, username, setPlayer } = useGameState();
   const [loading, setLoading] = useState(true);
   const [onlineCount] = useState(() => Math.floor(Math.random() * 500) + 100);
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
     initPlayer();
@@ -25,12 +35,14 @@ export default function HomeScreen() {
 
       const country = await detectCountry();
       const id = crypto.randomUUID();
+      const savedName = localStorage.getItem('gdq_username');
+      const name = savedName || `Player_${id.slice(0, 4)}`;
       setPlayer({
         playerId: id,
         userId: id,
         countryCode: country,
-        username: `Player_${id.slice(0, 4)}`,
-        xp: 0,
+        username: name,
+        xp: Number(localStorage.getItem('gdq_xp') || '0'),
       });
     } catch (e) {
       console.error('Init failed:', e);
@@ -44,6 +56,19 @@ export default function HomeScreen() {
   function handleFindOpponent() {
     if (!playerId) return;
     navigate('/matchmaking');
+  }
+
+  function openNameDialog() {
+    setNewName(username);
+    setNameDialogOpen(true);
+  }
+
+  function saveName() {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    useGameState.setState({ username: trimmed });
+    localStorage.setItem('gdq_username', trimmed);
+    setNameDialogOpen(false);
   }
 
   const level = Math.floor(xp / 200) + 1;
@@ -70,9 +95,12 @@ export default function HomeScreen() {
         <div className="flex items-center gap-4">
           <CountryFlag code={countryCode} size="lg" />
           <div className="flex-1">
-            <p className="text-lg font-semibold">{useGameState.getState().username}</p>
+            <p className="text-lg font-semibold">{username}</p>
             <p className="text-sm text-muted-foreground font-mono">Level {level} • {xp} XP</p>
           </div>
+          <Button variant="ghost" size="sm" onClick={openNameDialog} className="text-xs text-muted-foreground hover:text-foreground">
+            ✏️ Name
+          </Button>
         </div>
       </div>
 
@@ -94,6 +122,26 @@ export default function HomeScreen() {
           🏆 Leaderboard
         </Button>
       </div>
+
+      {/* Change Name Dialog */}
+      <Dialog open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
+        <DialogContent className="max-w-[340px]">
+          <DialogHeader>
+            <DialogTitle>Change Name</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            maxLength={20}
+            placeholder="Enter your name"
+            onKeyDown={(e) => e.key === 'Enter' && saveName()}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button onClick={saveName} className="w-full">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
