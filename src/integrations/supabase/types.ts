@@ -14,7 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      answers: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          player_id: string
+          question_index: number
+          room_id: string
+          time_taken: number
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          player_id: string
+          question_index: number
+          room_id: string
+          time_taken?: number
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          player_id?: string
+          question_index?: number
+          room_id?: string
+          time_taken?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          country_code: string
+          created_at: string
+          draws: number
+          id: string
+          losses: number
+          streak: number
+          updated_at: string
+          user_id: string | null
+          username: string
+          wins: number
+          xp: number
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string
+          draws?: number
+          id?: string
+          losses?: number
+          streak?: number
+          updated_at?: string
+          user_id?: string | null
+          username?: string
+          wins?: number
+          xp?: number
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          draws?: number
+          id?: string
+          losses?: number
+          streak?: number
+          updated_at?: string
+          user_id?: string | null
+          username?: string
+          wins?: number
+          xp?: number
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          id: string
+          player1_id: string | null
+          player2_id: string | null
+          questions: Json | null
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player1_id?: string | null
+          player2_id?: string | null
+          questions?: Json | null
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player1_id?: string | null
+          player2_id?: string | null
+          questions?: Json | null
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_player1_id_fkey"
+            columns: ["player1_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_player2_id_fkey"
+            columns: ["player2_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
