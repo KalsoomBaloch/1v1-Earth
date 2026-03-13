@@ -138,7 +138,37 @@ export default function HomeScreen() {
 
       <div className="w-full rounded-xl bg-card border border-border p-6 mb-6 box-glow-blue">
         <div className="flex items-center gap-4">
-          <CountryFlag code={countryCode} size="lg" />
+          <Popover open={countryPickerOpen} onOpenChange={setCountryPickerOpen}>
+            <PopoverTrigger asChild>
+              <button className="cursor-pointer hover:scale-110 transition-transform" title="Change country">
+                <CountryFlag code={countryCode} size="lg" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2" align="start">
+              <Input
+                placeholder="Search country..."
+                value={countrySearch}
+                onChange={(e) => setCountrySearch(e.target.value)}
+                className="mb-2 h-8 text-sm"
+                autoFocus
+              />
+              <ScrollArea className="h-48">
+                {filteredCountries.map((c) => (
+                  <button
+                    key={c.code}
+                    onClick={() => selectCountry(c.code)}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors text-left"
+                  >
+                    <span>{countryToFlag(c.code)}</span>
+                    <span>{c.name}</span>
+                  </button>
+                ))}
+                {filteredCountries.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">No results</p>
+                )}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
           <div className="flex-1">
             <p className="text-lg font-semibold">{username}</p>
             <p className="text-sm text-muted-foreground font-mono">Level {level} • {xp} XP</p>
