@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { CountryFlag } from '@/components/CountryFlag';
 import { countryName } from '@/lib/country';
 import { Button } from '@/components/ui/button';
@@ -10,40 +9,29 @@ interface LeaderboardEntry {
   total_wins: number;
 }
 
+const MOCK_LEADERBOARD: LeaderboardEntry[] = [
+  { country_code: 'US', total_wins: 142 },
+  { country_code: 'GB', total_wins: 98 },
+  { country_code: 'DE', total_wins: 87 },
+  { country_code: 'JP', total_wins: 76 },
+  { country_code: 'BR', total_wins: 65 },
+  { country_code: 'FR', total_wins: 54 },
+  { country_code: 'IN', total_wins: 48 },
+  { country_code: 'CA', total_wins: 41 },
+  { country_code: 'AU', total_wins: 35 },
+  { country_code: 'KR', total_wins: 29 },
+];
+
 export default function LeaderboardScreen() {
   const navigate = useNavigate();
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [entries] = useState<LeaderboardEntry[]>(MOCK_LEADERBOARD);
   const [nextReset, setNextReset] = useState('');
 
   useEffect(() => {
-    fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 60000);
     updateResetTimer();
     const timerInterval = setInterval(updateResetTimer, 1000);
-    return () => { clearInterval(interval); clearInterval(timerInterval); };
+    return () => clearInterval(timerInterval);
   }, []);
-
-  async function fetchLeaderboard() {
-    const { data } = await supabase
-      .from('players')
-      .select('country_code, wins');
-
-    if (data) {
-      const grouped: Record<string, number> = {};
-      data.forEach(p => {
-        grouped[p.country_code] = (grouped[p.country_code] || 0) + p.wins;
-      });
-
-      const sorted = Object.entries(grouped)
-        .map(([country_code, total_wins]) => ({ country_code, total_wins }))
-        .sort((a, b) => b.total_wins - a.total_wins)
-        .slice(0, 10);
-
-      setEntries(sorted);
-    }
-    setLoading(false);
-  }
 
   function updateResetTimer() {
     const now = new Date();
@@ -69,36 +57,25 @@ export default function LeaderboardScreen() {
         <div />
       </div>
 
-      {/* Reset timer */}
       <div className="text-center mb-6 bg-card border border-border rounded-xl p-3">
         <p className="text-xs text-muted-foreground">Weekly reset in</p>
         <p className="text-lg font-bold font-mono text-primary">{nextReset}</p>
       </div>
 
-      {/* Entries */}
       <div className="space-y-2">
-        {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
-        ) : entries.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="text-4xl mb-3">🌍</p>
-            <p>No games played yet. Be the first!</p>
+        {entries.map((entry, i) => (
+          <div
+            key={entry.country_code}
+            className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 transition-colors hover:border-primary/30"
+          >
+            <span className="text-xl w-8 text-center font-mono">
+              {i < 3 ? medals[i] : `#${i + 1}`}
+            </span>
+            <CountryFlag code={entry.country_code} size="sm" />
+            <span className="flex-1 font-semibold">{countryName(entry.country_code)}</span>
+            <span className="font-bold font-mono text-primary">{entry.total_wins} W</span>
           </div>
-        ) : (
-          entries.map((entry, i) => (
-            <div
-              key={entry.country_code}
-              className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 transition-colors hover:border-primary/30"
-            >
-              <span className="text-xl w-8 text-center font-mono">
-                {i < 3 ? medals[i] : `#${i + 1}`}
-              </span>
-              <CountryFlag code={entry.country_code} size="sm" />
-              <span className="flex-1 font-semibold">{countryName(entry.country_code)}</span>
-              <span className="font-bold font-mono text-primary">{entry.total_wins} W</span>
-            </div>
-          ))
-        )}
+        ))}
       </div>
     </div>
   );

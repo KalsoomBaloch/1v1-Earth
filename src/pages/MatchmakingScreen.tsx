@@ -1,131 +1,55 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useGameState } from '@/hooks/useGameState';
 import { fetchQuestions } from '@/lib/trivia';
 import { CountryFlag } from '@/components/CountryFlag';
 import { GlobeSpinner } from '@/components/GlobeSpinner';
 import { Button } from '@/components/ui/button';
 
+const FAKE_COUNTRIES = ['US', 'GB', 'DE', 'FR', 'JP', 'BR', 'IN', 'CA', 'AU', 'KR', 'MX', 'ES', 'IT', 'NL', 'SE'];
+
 export default function MatchmakingScreen() {
   const navigate = useNavigate();
   const { playerId, countryCode, setRoom, setQuestions, reset } = useGameState();
-  const [status, setStatus] = useState<'searching' | 'found' | 'timeout'>('searching');
+  const [status, setStatus] = useState<'searching' | 'found'>('searching');
   const [opponentCountry, setOpponentCountry] = useState('');
   const [countdown, setCountdown] = useState(3);
-  const roomIdRef = useRef<string | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const subscriptionRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (!playerId) {
       navigate('/');
       return;
     }
-    findOrCreateRoom();
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current);
-    };
+    simulateMatchmaking();
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
-  async function findOrCreateRoom() {
-    // Try to join an existing waiting room
-    const { data: waitingRooms } = await supabase
-      .from('rooms')
-      .select('*')
-      .eq('status', 'waiting')
-      .is('player2_id', null)
-      .neq('player1_id', playerId)
-      .order('created_at', { ascending: true })
-      .limit(1);
+  async function simulateMatchmaking() {
+    const questions = await fetchQuestions();
+    const oppCountry = FAKE_COUNTRIES[Math.floor(Math.random() * FAKE_COUNTRIES.length)];
 
-    if (waitingRooms && waitingRooms.length > 0) {
-      const room = waitingRooms[0];
-      roomIdRef.current = room.id;
-
-      // Fetch questions and join room
-      const questions = await fetchQuestions();
-
-      await supabase
-        .from('rooms')
-        .update({ player2_id: playerId, status: 'active', questions: questions as unknown as import('@/integrations/supabase/types').Json })
-        .eq('id', room.id);
-
-      // Get opponent info
-      const { data: opponent } = await supabase
-        .from('players')
-        .select('country_code')
-        .eq('id', room.player1_id)
-        .single();
-
-      const oppCountry = opponent?.country_code || 'UN';
+    // Simulate 3 second search
+    timerRef.current = setTimeout(() => {
+      const roomId = crypto.randomUUID();
+      const opponentId = crypto.randomUUID();
       setOpponentCountry(oppCountry);
-      setRoom(room.id, room.player1_id, oppCountry);
+      setRoom(roomId, opponentId, oppCountry);
       setQuestions(questions);
       setStatus('found');
 
-      // Start countdown
-      startCountdown(room.id);
-    } else {
-      // Create a new room
-      const { data: newRoom } = await supabase
-        .from('rooms')
-        .insert({ player1_id: playerId, status: 'waiting' })
-        .select()
-        .single();
-
-      if (!newRoom) return;
-      roomIdRef.current = newRoom.id;
-
-      // Listen for opponent joining
-      const channel = supabase
-        .channel(`room-${newRoom.id}`)
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${newRoom.id}` },
-          async (payload) => {
-            const updated = payload.new as any;
-            if (updated.status === 'active' && updated.player2_id) {
-              const { data: opponent } = await supabase
-                .from('players')
-                .select('country_code')
-                .eq('id', updated.player2_id)
-                .single();
-
-              const oppCountry = opponent?.country_code || 'UN';
-              setOpponentCountry(oppCountry);
-              setRoom(newRoom.id, updated.player2_id, oppCountry);
-              setQuestions((updated.questions as any) || []);
-              setStatus('found');
-              startCountdown(newRoom.id);
-            }
-          }
-        )
-        .subscribe();
-
-      subscriptionRef.current = channel;
-
-      // Timeout after 30 seconds
-      timeoutRef.current = setTimeout(() => {
-        setStatus('timeout');
-        supabase.from('rooms').delete().eq('id', newRoom.id);
-      }, 30000);
-    }
-  }
-
-  function startCountdown(_roomId: string) {
-    let count = 3;
-    setCountdown(count);
-    const interval = setInterval(() => {
-      count--;
+      // Countdown
+      let count = 3;
       setCountdown(count);
-      if (count <= 0) {
-        clearInterval(interval);
-        navigate('/duel');
-      }
-    }, 1000);
+      const interval = setInterval(() => {
+        count--;
+        setCountdown(count);
+        if (count <= 0) {
+          clearInterval(interval);
+          navigate('/duel');
+        }
+      }, 1000);
+    }, 3000);
   }
 
   return (
@@ -171,17 +95,6 @@ export default function MatchmakingScreen() {
           <div className="text-8xl font-bold text-primary text-glow-blue animate-pulse">
             {countdown}
           </div>
-        </div>
-      )}
-
-      {status === 'timeout' && (
-        <div className="text-center space-y-6">
-          <span className="text-6xl">😔</span>
-          <h2 className="text-2xl font-bold">No Opponent Found</h2>
-          <p className="text-muted-foreground">Try again in a moment</p>
-          <Button onClick={() => { reset(); navigate('/'); }} className="bg-primary text-primary-foreground">
-            Back to Home
-          </Button>
         </div>
       )}
     </div>
