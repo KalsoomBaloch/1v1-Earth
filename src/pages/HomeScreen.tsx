@@ -64,6 +64,8 @@ export default function HomeScreen() {
 
       const country = await detectCountry();
       const id = crypto.randomUUID();
+      const savedCountry = localStorage.getItem('gdq_country');
+      const finalCountry = savedCountry || country;
       const savedName = localStorage.getItem('gdq_username');
       const name = savedName || `Player_${id.slice(0, 4)}`;
       setPlayer({
