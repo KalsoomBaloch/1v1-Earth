@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useGameState } from '@/hooks/useGameState';
 import { fetchQuestions } from '@/lib/trivia';
 import { CountryFlag } from '@/components/CountryFlag';
@@ -50,7 +50,7 @@ export default function MatchmakingScreen() {
 
       await supabase
         .from('rooms')
-        .update({ player2_id: playerId, status: 'active', questions })
+        .update({ player2_id: playerId, status: 'active', questions: questions as unknown as import('@/integrations/supabase/types').Json })
         .eq('id', room.id);
 
       // Get opponent info
@@ -97,7 +97,7 @@ export default function MatchmakingScreen() {
               const oppCountry = opponent?.country_code || 'UN';
               setOpponentCountry(oppCountry);
               setRoom(newRoom.id, updated.player2_id, oppCountry);
-              setQuestions(updated.questions || []);
+              setQuestions((updated.questions as any) || []);
               setStatus('found');
               startCountdown(newRoom.id);
             }
