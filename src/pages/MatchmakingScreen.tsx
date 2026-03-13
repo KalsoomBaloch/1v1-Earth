@@ -50,7 +50,7 @@ export default function MatchmakingScreen() {
 
       await supabase
         .from('rooms')
-        .update({ player2_id: playerId, status: 'active', questions })
+        .update({ player2_id: playerId, status: 'active', questions: questions as unknown as import('@/integrations/supabase/types').Json })
         .eq('id', room.id);
 
       // Get opponent info
