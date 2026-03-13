@@ -71,7 +71,7 @@ export default function HomeScreen() {
       setPlayer({
         playerId: id,
         userId: id,
-        countryCode: country,
+        countryCode: finalCountry,
         username: name,
         xp: Number(localStorage.getItem('gdq_xp') || '0'),
       });
