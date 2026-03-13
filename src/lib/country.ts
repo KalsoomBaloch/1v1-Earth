@@ -31,8 +31,15 @@ export async function detectCountry(): Promise<string> {
   try {
     const res = await fetch('https://ipapi.co/json/');
     const data = await res.json();
-    return data.country_code || 'UN';
-  } catch {
-    return 'UN';
-  }
+    if (data.country_code) return data.country_code;
+  } catch {}
+  // Fallback: derive country from browser language (e.g. "en-US" → "US")
+  try {
+    const lang = navigator.language || navigator.languages?.[0] || '';
+    const parts = lang.split('-');
+    if (parts.length >= 2 && parts[1].length === 2) {
+      return parts[1].toUpperCase();
+    }
+  } catch {}
+  return 'UN';
 }
