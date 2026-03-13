@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
+import { countryName } from '@/lib/country';
 import { XpBar } from '@/components/XpBar';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function ResultScreen() {
   const navigate = useNavigate();
-  const { result, xpEarned, myScore, opponentScore, countryCode, opponentCountry, xp, reset } = useGameState();
+  const { result, xpEarned, myScore, opponentScore, countryCode, opponentCountry, xp, username, reset } = useGameState();
+  const [copied, setCopied] = useState(false);
 
   const resultConfig = {
     win: { emoji: '🏆', text: 'Victory!', color: 'text-glow-green text-glow-green' },
@@ -26,6 +30,32 @@ export default function ResultScreen() {
     navigate('/');
   }
 
+  function handleShare() {
+    const flag = (code: string) => {
+      if (!code || code === 'UN') return '🌍';
+      const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
+      return String.fromCodePoint(...codePoints);
+    };
+
+    const resultEmoji = result === 'win' ? '🏆' : result === 'loss' ? '😞' : '🤝';
+    const text = [
+      `${resultEmoji} Global Duel Quest ${resultEmoji}`,
+      '',
+      `${flag(countryCode)} ${countryName(countryCode)} ${myScore} - ${opponentScore} ${countryName(opponentCountry)} ${flag(opponentCountry)}`,
+      '',
+      `Result: ${config.text}`,
+      `XP earned: +${xpEarned}`,
+      '',
+      '🌍 Play at global-duel-quest.lovable.app',
+    ].join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      toast.success('Result copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 max-w-[420px] mx-auto">
       {/* Result */}
@@ -35,21 +65,30 @@ export default function ResultScreen() {
       </div>
 
       {/* Score Card */}
-      <div className="w-full bg-card border border-border rounded-xl p-6 mb-6">
+      <div className="w-full bg-card border border-border rounded-xl p-6 mb-4">
         <div className="flex items-center justify-between">
           <div className="text-center">
             <CountryFlag code={countryCode} size="lg" />
-            <p className="text-2xl font-bold font-mono mt-2">{myScore}</p>
-            <p className="text-xs text-muted-foreground">You</p>
+            <p className="text-xs text-muted-foreground mt-1">{countryName(countryCode)}</p>
+            <p className="text-2xl font-bold font-mono mt-1">{myScore}</p>
           </div>
           <div className="text-3xl text-muted-foreground font-bold">vs</div>
           <div className="text-center">
             <CountryFlag code={opponentCountry} size="lg" />
-            <p className="text-2xl font-bold font-mono mt-2">{opponentScore}</p>
-            <p className="text-xs text-muted-foreground">Opponent</p>
+            <p className="text-xs text-muted-foreground mt-1">{countryName(opponentCountry)}</p>
+            <p className="text-2xl font-bold font-mono mt-1">{opponentScore}</p>
           </div>
         </div>
       </div>
+
+      {/* Share Button */}
+      <Button
+        variant="outline"
+        onClick={handleShare}
+        className="w-full mb-6 border-border text-muted-foreground hover:text-foreground"
+      >
+        {copied ? '✅ Copied!' : '📋 Share Result'}
+      </Button>
 
       {/* XP Bar */}
       <div className="w-full mb-8">

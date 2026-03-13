@@ -97,4 +97,19 @@
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
+
+  @keyframes flash-correct {
+    0% { background-color: hsl(var(--glow-green) / 0.4); }
+    100% { background-color: transparent; }
+  }
+  @keyframes flash-wrong {
+    0% { background-color: hsl(var(--glow-red) / 0.4); }
+    100% { background-color: transparent; }
+  }
+  .animate-flash-correct {
+    animation: flash-correct 0.6s ease-out;
+  }
+  .animate-flash-wrong {
+    animation: flash-wrong 0.6s ease-out;
+  }
 }

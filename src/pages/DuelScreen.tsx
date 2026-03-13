@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
+import { countryName } from '@/lib/country';
 import { cn } from '@/lib/utils';
 
 export default function DuelScreen() {
@@ -10,12 +11,13 @@ export default function DuelScreen() {
     roomId, questions, currentQuestion, myScore, opponentScore,
     myAnswers, opponentAnswered, timeLeft, countryCode, opponentCountry,
     submitAnswer, setOpponentAnswered, incrementOpponentScore, nextQuestion,
-    setTimeLeft, setDuelPhase, setResult, xp,
+    setTimeLeft, setDuelPhase, setResult, username,
   } = useGameState();
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [answerStartTime, setAnswerStartTime] = useState(Date.now());
+  const [flashState, setFlashState] = useState<'correct' | 'wrong' | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function DuelScreen() {
     if (currentQuestion > 0) {
       setSelectedAnswer(null);
       setRevealed(false);
+      setFlashState(null);
       setAnswerStartTime(Date.now());
       startTimer();
       simulateOpponent(currentQuestion);
@@ -46,7 +49,6 @@ export default function DuelScreen() {
       const state = useGameState.getState();
       if (state.currentQuestion !== qi) return;
       setOpponentAnswered(qi);
-      // 50% chance opponent gets it right
       if (Math.random() > 0.5) incrementOpponentScore();
     }, delay);
   }
@@ -77,6 +79,9 @@ export default function DuelScreen() {
     const timeTaken = (Date.now() - answerStartTime) / 1000;
 
     submitAnswer(qi, answer || '');
+
+    const isCorrect = answer === state.questions[qi]?.correct_answer;
+    setFlashState(isCorrect ? 'correct' : 'wrong');
 
     const speedBonus = timeTaken < 3 ? 10 : 0;
     setRevealed(true);
@@ -124,18 +129,29 @@ export default function DuelScreen() {
   if (!q) return null;
 
   return (
-    <div className="flex min-h-screen flex-col px-4 py-6 max-w-[420px] mx-auto">
-      {/* Header */}
+    <div className={cn(
+      "flex min-h-screen flex-col px-4 py-6 max-w-[420px] mx-auto transition-colors duration-500",
+      flashState === 'correct' && 'animate-flash-correct',
+      flashState === 'wrong' && 'animate-flash-wrong',
+    )}>
+      {/* Header with opponent info */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <CountryFlag code={countryCode} size="sm" />
-          <span className="font-bold text-primary font-mono">{myScore}</span>
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground leading-none">{username}</span>
+            <span className="font-bold text-primary font-mono text-lg">{myScore}</span>
+          </div>
         </div>
         <div className="text-center">
           <span className="text-xs text-muted-foreground font-mono">Q{currentQuestion + 1}/5</span>
+          <p className="text-lg font-bold text-muted-foreground">vs</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-bold text-destructive font-mono">{opponentScore}</span>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-muted-foreground leading-none">{countryName(opponentCountry)}</span>
+            <span className="font-bold text-destructive font-mono text-lg">{opponentScore}</span>
+          </div>
           <CountryFlag code={opponentCountry} size="sm" />
         </div>
       </div>
@@ -184,8 +200,8 @@ export default function DuelScreen() {
                 "w-full text-left p-4 rounded-xl border transition-all font-medium",
                 !showResult && !isSelected && "bg-secondary border-border hover:border-primary hover:bg-secondary/80",
                 !showResult && isSelected && "bg-primary/20 border-primary",
-                showResult && isCorrect && "bg-glow-green/20 border-glow-green text-foreground",
-                showResult && isSelected && !isCorrect && "bg-destructive/20 border-destructive",
+                showResult && isCorrect && "bg-glow-green/20 border-glow-green text-foreground scale-[1.02]",
+                showResult && isSelected && !isCorrect && "bg-destructive/20 border-destructive scale-95 opacity-80",
                 showResult && !isCorrect && !isSelected && "opacity-50",
               )}
             >
