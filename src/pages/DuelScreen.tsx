@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
 import { cn } from '@/lib/utils';
@@ -8,17 +7,16 @@ import { cn } from '@/lib/utils';
 export default function DuelScreen() {
   const navigate = useNavigate();
   const {
-    playerId, roomId, questions, currentQuestion, myScore, opponentScore,
+    roomId, questions, currentQuestion, myScore, opponentScore,
     myAnswers, opponentAnswered, timeLeft, countryCode, opponentCountry,
     submitAnswer, setOpponentAnswered, incrementOpponentScore, nextQuestion,
-    setTimeLeft, setDuelPhase, setResult,
+    setTimeLeft, setDuelPhase, setResult, xp,
   } = useGameState();
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [answerStartTime, setAnswerStartTime] = useState(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval>>();
-  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     if (!roomId || !questions.length) {
@@ -26,46 +24,40 @@ export default function DuelScreen() {
       return;
     }
     setDuelPhase('playing');
-    setupRealtimeChannel();
     startTimer();
+    simulateOpponent(0);
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   useEffect(() => {
-    setSelectedAnswer(null);
-    setRevealed(false);
-    setAnswerStartTime(Date.now());
-    startTimer();
+    if (currentQuestion > 0) {
+      setSelectedAnswer(null);
+      setRevealed(false);
+      setAnswerStartTime(Date.now());
+      startTimer();
+      simulateOpponent(currentQuestion);
+    }
   }, [currentQuestion]);
 
-  function setupRealtimeChannel() {
-    const channel = supabase
-      .channel(`duel-${roomId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'answers', filter: `room_id=eq.${roomId}` },
-        (payload) => {
-          const answer = payload.new as any;
-          if (answer.player_id !== playerId) {
-            setOpponentAnswered(answer.question_index);
-            if (answer.is_correct) incrementOpponentScore();
-          }
-        }
-      )
-      .subscribe();
-    channelRef.current = channel;
+  function simulateOpponent(qi: number) {
+    const delay = 2000 + Math.random() * 6000;
+    setTimeout(() => {
+      const state = useGameState.getState();
+      if (state.currentQuestion !== qi) return;
+      setOpponentAnswered(qi);
+      // 50% chance opponent gets it right
+      if (Math.random() > 0.5) incrementOpponentScore();
+    }, delay);
   }
 
   function startTimer() {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimeLeft(10);
     timerRef.current = setInterval(() => {
-      setTimeLeft(useGameState.getState().timeLeft - 1);
-      if (useGameState.getState().timeLeft <= 0) {
+      const t = useGameState.getState().timeLeft - 1;
+      setTimeLeft(t);
+      if (t <= 0) {
         clearInterval(timerRef.current);
         handleTimerEnd();
       }
@@ -79,30 +71,16 @@ export default function DuelScreen() {
     }
   }, []);
 
-  async function doSubmitAnswer(answer: string | null) {
+  function doSubmitAnswer(answer: string | null) {
     const state = useGameState.getState();
     const qi = state.currentQuestion;
     const timeTaken = (Date.now() - answerStartTime) / 1000;
-    const isCorrect = answer === state.questions[qi]?.correct_answer;
 
     submitAnswer(qi, answer || '');
 
-    // Save to DB
-    await supabase.from('answers').insert({
-      room_id: roomId,
-      player_id: playerId,
-      question_index: qi,
-      answer: answer || '',
-      time_taken: timeTaken,
-      is_correct: isCorrect,
-    });
-
-    // Calculate speed bonus XP
     const speedBonus = timeTaken < 3 ? 10 : 0;
-
     setRevealed(true);
 
-    // Wait then move to next question or finish
     setTimeout(() => {
       if (qi >= 4) {
         finishDuel(speedBonus);
@@ -119,7 +97,7 @@ export default function DuelScreen() {
     doSubmitAnswer(answer);
   }
 
-  async function finishDuel(lastSpeedBonus: number) {
+  function finishDuel(lastSpeedBonus: number) {
     const state = useGameState.getState();
     const finalMyScore = state.myScore;
     const finalOppScore = state.opponentScore;
@@ -128,34 +106,20 @@ export default function DuelScreen() {
     let baseXp: number;
 
     if (finalMyScore > finalOppScore) {
-      result = 'win';
-      baseXp = 50;
+      result = 'win'; baseXp = 50;
     } else if (finalMyScore < finalOppScore) {
-      result = 'loss';
-      baseXp = 10;
+      result = 'loss'; baseXp = 10;
     } else {
-      result = 'draw';
-      baseXp = 25;
+      result = 'draw'; baseXp = 25;
     }
 
     const totalXp = baseXp + lastSpeedBonus;
     setResult(result, totalXp);
-
-    // Update player stats
-    const updates: any = { xp: state.xp + totalXp };
-    if (result === 'win') {
-      updates.wins = (await supabase.from('players').select('wins').eq('id', playerId).single()).data?.wins + 1 || 1;
-    } else if (result === 'loss') {
-      updates.losses = (await supabase.from('players').select('losses').eq('id', playerId).single()).data?.losses + 1 || 1;
-    }
-
-    await supabase.from('players').update(updates).eq('id', playerId);
     setDuelPhase('finished');
     navigate('/result');
   }
 
   if (!questions.length) return null;
-
   const q = questions[currentQuestion];
   if (!q) return null;
 
