@@ -97,7 +97,7 @@ export default function MatchmakingScreen() {
               const oppCountry = opponent?.country_code || 'UN';
               setOpponentCountry(oppCountry);
               setRoom(newRoom.id, updated.player2_id, oppCountry);
-              setQuestions(updated.questions || []);
+              setQuestions((updated.questions as any) || []);
               setStatus('found');
               startCountdown(newRoom.id);
             }
