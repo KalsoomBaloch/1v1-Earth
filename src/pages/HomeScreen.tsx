@@ -87,6 +87,22 @@ export default function HomeScreen() {
     navigate('/matchmaking');
   }
 
+  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+
+  const filteredCountries = useMemo(() => {
+    const q = countrySearch.toLowerCase();
+    if (!q) return ALL_COUNTRIES;
+    return ALL_COUNTRIES.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q));
+  }, [countrySearch]);
+
+  function selectCountry(code: string) {
+    useGameState.setState({ countryCode: code });
+    localStorage.setItem('gdq_country', code);
+    setCountryPickerOpen(false);
+    setCountrySearch('');
+  }
+
   function openNameDialog() {
     setNewName(username);
     setNameDialogOpen(true);
