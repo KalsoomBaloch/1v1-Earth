@@ -9,22 +9,25 @@ interface LeaderboardEntry {
   total_wins: number;
 }
 
-const MOCK_LEADERBOARD: LeaderboardEntry[] = [
-  { country_code: 'US', total_wins: 142 },
-  { country_code: 'GB', total_wins: 98 },
-  { country_code: 'DE', total_wins: 87 },
-  { country_code: 'JP', total_wins: 76 },
-  { country_code: 'BR', total_wins: 65 },
-  { country_code: 'FR', total_wins: 54 },
-  { country_code: 'IN', total_wins: 48 },
-  { country_code: 'CA', total_wins: 41 },
-  { country_code: 'AU', total_wins: 35 },
-  { country_code: 'KR', total_wins: 29 },
-];
+function loadLeaderboard(): LeaderboardEntry[] {
+  const raw = localStorage.getItem('leaderboard_data');
+  const lb: Record<string, number> = raw ? JSON.parse(raw) : {};
+  // Merge with defaults so board isn't empty on first visit
+  const defaults: Record<string, number> = {
+    US: 142, GB: 98, DE: 87, JP: 76, BR: 65, FR: 54, IN: 48, CA: 41, AU: 35, KR: 29,
+  };
+  const merged = { ...defaults };
+  for (const [code, wins] of Object.entries(lb)) {
+    merged[code] = (merged[code] || 0) + wins;
+  }
+  return Object.entries(merged)
+    .map(([country_code, total_wins]) => ({ country_code, total_wins }))
+    .sort((a, b) => b.total_wins - a.total_wins);
+}
 
 export default function LeaderboardScreen() {
   const navigate = useNavigate();
-  const [entries] = useState<LeaderboardEntry[]>(MOCK_LEADERBOARD);
+  const [entries] = useState<LeaderboardEntry[]>(loadLeaderboard);
   const [nextReset, setNextReset] = useState('');
 
   useEffect(() => {
