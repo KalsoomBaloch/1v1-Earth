@@ -62,23 +62,35 @@ export default function HomeScreen() {
         return;
       }
 
-      const country = await detectCountry();
       const id = crypto.randomUUID();
-      const savedCountry = localStorage.getItem('gdq_country');
-      const finalCountry = savedCountry || country;
-      const savedName = localStorage.getItem('gdq_username');
+      const savedName = localStorage.getItem('player_name');
+      const savedCountry = localStorage.getItem('player_country');
+      const savedXp = Number(localStorage.getItem('player_xp') || '0');
+
+      // Only call API if no country saved yet
+      let finalCountry = savedCountry;
+      if (!finalCountry) {
+        finalCountry = await detectCountry();
+        localStorage.setItem('player_country', finalCountry);
+      }
+
       const name = savedName || `Player_${id.slice(0, 4)}`;
+      if (!savedName) localStorage.setItem('player_name', name);
+
       setPlayer({
         playerId: id,
         userId: id,
         countryCode: finalCountry,
         username: name,
-        xp: Number(localStorage.getItem('gdq_xp') || '0'),
+        xp: savedXp,
       });
     } catch (e) {
       console.error('Init failed:', e);
       const id = crypto.randomUUID();
-      setPlayer({ playerId: id, userId: id, countryCode: 'UN', username: `Player_${id.slice(0, 4)}`, xp: 0 });
+      const fallbackName = localStorage.getItem('player_name') || `Player_${id.slice(0, 4)}`;
+      const fallbackCountry = localStorage.getItem('player_country') || 'UN';
+      const fallbackXp = Number(localStorage.getItem('player_xp') || '0');
+      setPlayer({ playerId: id, userId: id, countryCode: fallbackCountry, username: fallbackName, xp: fallbackXp });
     } finally {
       setLoading(false);
     }
