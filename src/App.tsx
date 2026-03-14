@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { MuteButton } from "@/components/MuteButton";
 import HomeScreen from "./pages/HomeScreen";
 import MatchmakingScreen from "./pages/MatchmakingScreen";
 import DuelScreen from "./pages/DuelScreen";
@@ -17,6 +18,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <MuteButton />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomeScreen />} />
