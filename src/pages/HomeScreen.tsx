@@ -99,8 +99,16 @@ export default function HomeScreen() {
 
   function handleFindOpponent() {
     if (!playerId) return;
+    playClick();
     navigate('/matchmaking');
   }
+
+  // Start background music on first interaction
+  useEffect(() => {
+    const handler = () => { startBgMusic(); window.removeEventListener('click', handler); };
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, []);
 
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
