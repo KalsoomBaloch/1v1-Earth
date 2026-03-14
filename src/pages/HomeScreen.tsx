@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { detectCountry, countryToFlag } from '@/lib/country';
+import { playClick, startBgMusic } from '@/lib/sounds';
 import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
 import { Button } from '@/components/ui/button';
