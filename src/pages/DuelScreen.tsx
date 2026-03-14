@@ -4,6 +4,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
 import { countryName } from '@/lib/country';
 import { cn } from '@/lib/utils';
+import { playCorrect, playWrong, playCountdownTick, fadeOutBgMusic } from '@/lib/sounds';
 
 export default function DuelScreen() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function DuelScreen() {
       navigate('/');
       return;
     }
+    fadeOutBgMusic();
     setDuelPhase('playing');
     startTimer();
     simulateOpponent(0);
@@ -59,6 +61,7 @@ export default function DuelScreen() {
     timerRef.current = setInterval(() => {
       const t = useGameState.getState().timeLeft - 1;
       setTimeLeft(t);
+      if (t > 0) playCountdownTick();
       if (t <= 0) {
         clearInterval(timerRef.current);
         handleTimerEnd();
@@ -82,6 +85,7 @@ export default function DuelScreen() {
 
     const isCorrect = answer === state.questions[qi]?.correct_answer;
     setFlashState(isCorrect ? 'correct' : 'wrong');
+    if (isCorrect) playCorrect(); else playWrong();
 
     const speedBonus = timeTaken < 3 ? 10 : 0;
     setRevealed(true);
@@ -134,7 +138,6 @@ export default function DuelScreen() {
       flashState === 'correct' && 'animate-flash-correct',
       flashState === 'wrong' && 'animate-flash-wrong',
     )}>
-      {/* Header with opponent info */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <CountryFlag code={countryCode} size="sm" />
@@ -156,7 +159,6 @@ export default function DuelScreen() {
         </div>
       </div>
 
-      {/* Timer */}
       <div className="mb-6">
         <div className="h-2 rounded-full bg-secondary overflow-hidden">
           <div
@@ -170,7 +172,6 @@ export default function DuelScreen() {
         <p className="text-center text-sm font-mono text-muted-foreground mt-1">{timeLeft}s</p>
       </div>
 
-      {/* Opponent status */}
       <div className="text-center mb-4">
         {opponentAnswered[currentQuestion] ? (
           <span className="text-xs text-glow-green font-mono">✓ Opponent answered</span>
@@ -179,12 +180,10 @@ export default function DuelScreen() {
         )}
       </div>
 
-      {/* Question */}
       <div className="bg-card border border-border rounded-xl p-5 mb-6">
         <p className="text-lg font-semibold leading-relaxed">{q.question}</p>
       </div>
 
-      {/* Answers */}
       <div className="space-y-3 flex-1">
         {q.all_answers.map((answer, i) => {
           const isSelected = selectedAnswer === answer;

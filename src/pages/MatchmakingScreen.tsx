@@ -5,6 +5,7 @@ import { fetchQuestions } from '@/lib/trivia';
 import { CountryFlag } from '@/components/CountryFlag';
 import { GlobeSpinner } from '@/components/GlobeSpinner';
 import { Button } from '@/components/ui/button';
+import { playMatchFound, playClick } from '@/lib/sounds';
 
 const FAKE_COUNTRIES = ['US', 'GB', 'DE', 'FR', 'JP', 'BR', 'IN', 'CA', 'AU', 'KR', 'MX', 'ES', 'IT', 'NL', 'SE'];
 
@@ -29,7 +30,6 @@ export default function MatchmakingScreen() {
     const questions = await fetchQuestions();
     const oppCountry = FAKE_COUNTRIES[Math.floor(Math.random() * FAKE_COUNTRIES.length)];
 
-    // Simulate 3 second search
     timerRef.current = setTimeout(() => {
       const roomId = crypto.randomUUID();
       const opponentId = crypto.randomUUID();
@@ -37,8 +37,8 @@ export default function MatchmakingScreen() {
       setRoom(roomId, opponentId, oppCountry);
       setQuestions(questions);
       setStatus('found');
+      playMatchFound();
 
-      // Countdown
       let count = 3;
       setCountdown(count);
       const interval = setInterval(() => {
@@ -72,7 +72,7 @@ export default function MatchmakingScreen() {
               <p className="text-xs text-muted-foreground mt-2">???</p>
             </div>
           </div>
-          <Button variant="ghost" onClick={() => { reset(); navigate('/'); }} className="text-muted-foreground">
+          <Button variant="ghost" onClick={() => { playClick(); reset(); navigate('/'); }} className="text-muted-foreground">
             Cancel
           </Button>
         </div>
