@@ -6,23 +6,30 @@ import { countryName } from '@/lib/country';
 import { XpBar } from '@/components/XpBar';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { playVictory, playDefeat, playClick } from '@/lib/sounds';
 
 export default function ResultScreen() {
   const navigate = useNavigate();
   const { result, xpEarned, myScore, opponentScore, countryCode, opponentCountry, xp, username, reset } = useGameState();
   const [copied, setCopied] = useState(false);
 
-  // Persist XP and update leaderboard after game
   useEffect(() => {
     if (xpEarned > 0) {
       localStorage.setItem('player_xp', String(xp));
     }
-    // Update leaderboard data
+    if (result === 'win') playVictory();
+    else if (result === 'loss') playDefeat();
+
     if (result && countryCode && countryCode !== 'UN') {
       const raw = localStorage.getItem('leaderboard_data');
-      const lb: Record<string, number> = raw ? JSON.parse(raw) : {};
-      if (result === 'win') {
-        lb[countryCode] = (lb[countryCode] || 0) + 1;
+      const lb: Record<string, { wins: number; losses: number }> = raw ? JSON.parse(raw) : {};
+      if (!lb[countryCode]) lb[countryCode] = { wins: 0, losses: 0 };
+      if (result === 'win') lb[countryCode].wins++;
+      else if (result === 'loss') lb[countryCode].losses++;
+      if (opponentCountry && opponentCountry !== 'UN') {
+        if (!lb[opponentCountry]) lb[opponentCountry] = { wins: 0, losses: 0 };
+        if (result === 'win') lb[opponentCountry].losses++;
+        else if (result === 'loss') lb[opponentCountry].wins++;
       }
       localStorage.setItem('leaderboard_data', JSON.stringify(lb));
     }
@@ -37,16 +44,19 @@ export default function ResultScreen() {
   const config = result ? resultConfig[result] : resultConfig.draw;
 
   function handleRematch() {
+    playClick();
     reset();
     navigate('/matchmaking');
   }
 
   function handleNewOpponent() {
+    playClick();
     reset();
     navigate('/');
   }
 
   function handleShare() {
+    playClick();
     const flag = (code: string) => {
       if (!code || code === 'UN') return '🌍';
       const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
@@ -74,13 +84,11 @@ export default function ResultScreen() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 max-w-[420px] mx-auto">
-      {/* Result */}
       <div className="text-center mb-8">
         <span className="text-7xl mb-4 block">{config.emoji}</span>
         <h1 className={`text-4xl font-bold ${config.color}`}>{config.text}</h1>
       </div>
 
-      {/* Score Card */}
       <div className="w-full bg-card border border-border rounded-xl p-6 mb-4">
         <div className="flex items-center justify-between">
           <div className="text-center">
@@ -97,7 +105,6 @@ export default function ResultScreen() {
         </div>
       </div>
 
-      {/* Share Button */}
       <Button
         variant="outline"
         onClick={handleShare}
@@ -106,12 +113,10 @@ export default function ResultScreen() {
         {copied ? '✅ Copied!' : '📋 Share Result'}
       </Button>
 
-      {/* XP Bar */}
       <div className="w-full mb-8">
         <XpBar current={xp} gained={xpEarned} />
       </div>
 
-      {/* Actions */}
       <div className="w-full space-y-3">
         <Button onClick={handleRematch} className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground box-glow-blue">
           ⚔️ Rematch
@@ -119,7 +124,7 @@ export default function ResultScreen() {
         <Button onClick={handleNewOpponent} variant="secondary" className="w-full h-14 text-lg font-bold">
           🌍 Find New Opponent
         </Button>
-        <Button variant="ghost" onClick={() => navigate('/leaderboard')} className="w-full text-muted-foreground">
+        <Button variant="ghost" onClick={() => { playClick(); navigate('/leaderboard'); }} className="w-full text-muted-foreground">
           🏆 Leaderboard
         </Button>
       </div>
