@@ -112,7 +112,7 @@ export default function HomeScreen() {
 
   function selectCountry(code: string) {
     useGameState.setState({ countryCode: code });
-    localStorage.setItem('gdq_country', code);
+    localStorage.setItem('player_country', code);
     setCountryPickerOpen(false);
     setCountrySearch('');
   }
