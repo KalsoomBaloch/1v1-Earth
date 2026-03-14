@@ -2,33 +2,54 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CountryFlag } from '@/components/CountryFlag';
 import { countryName } from '@/lib/country';
+import { useGameState } from '@/hooks/useGameState';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { playClick } from '@/lib/sounds';
 
 interface LeaderboardEntry {
   country_code: string;
-  total_wins: number;
+  wins: number;
+  losses: number;
+  total: number;
 }
 
 function loadLeaderboard(): LeaderboardEntry[] {
   const raw = localStorage.getItem('leaderboard_data');
-  const lb: Record<string, number> = raw ? JSON.parse(raw) : {};
-  // Merge with defaults so board isn't empty on first visit
-  const defaults: Record<string, number> = {
-    US: 142, GB: 98, DE: 87, JP: 76, BR: 65, FR: 54, IN: 48, CA: 41, AU: 35, KR: 29,
+  const lb: Record<string, { wins: number; losses: number }> = raw ? JSON.parse(raw) : {};
+  // Seed defaults so board isn't empty on first visit
+  const defaults: Record<string, { wins: number; losses: number }> = {
+    US: { wins: 142, losses: 58 }, GB: { wins: 98, losses: 42 }, DE: { wins: 87, losses: 39 },
+    JP: { wins: 76, losses: 34 }, BR: { wins: 65, losses: 30 }, FR: { wins: 54, losses: 26 },
+    IN: { wins: 48, losses: 22 }, CA: { wins: 41, losses: 19 }, AU: { wins: 35, losses: 15 },
+    KR: { wins: 29, losses: 11 },
   };
-  const merged = { ...defaults };
-  for (const [code, wins] of Object.entries(lb)) {
-    merged[code] = (merged[code] || 0) + wins;
+  const merged: Record<string, { wins: number; losses: number }> = {};
+  // Add defaults
+  for (const [code, val] of Object.entries(defaults)) {
+    merged[code] = { ...val };
+  }
+  // Merge real data on top
+  for (const [code, val] of Object.entries(lb)) {
+    if (merged[code]) {
+      merged[code].wins += val.wins;
+      merged[code].losses += val.losses;
+    } else {
+      merged[code] = { ...val };
+    }
   }
   return Object.entries(merged)
-    .map(([country_code, total_wins]) => ({ country_code, total_wins }))
-    .sort((a, b) => b.total_wins - a.total_wins);
+    .map(([country_code, { wins, losses }]) => ({ country_code, wins, losses, total: wins + losses }))
+    .sort((a, b) => b.wins - a.wins);
 }
 
 export default function LeaderboardScreen() {
   const navigate = useNavigate();
+  const playerCountry = useGameState((s) => s.countryCode);
   const [entries] = useState<LeaderboardEntry[]>(loadLeaderboard);
   const [nextReset, setNextReset] = useState('');
+
+  const playerRank = entries.findIndex(e => e.country_code === playerCountry) + 1;
 
   useEffect(() => {
     updateResetTimer();
@@ -53,12 +74,19 @@ export default function LeaderboardScreen() {
   return (
     <div className="flex min-h-screen flex-col px-4 py-8 max-w-[420px] mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <Button variant="ghost" onClick={() => navigate('/')} className="text-muted-foreground">
+        <Button variant="ghost" onClick={() => { playClick(); navigate('/'); }} className="text-muted-foreground">
           ← Back
         </Button>
         <h1 className="text-2xl font-bold">🏆 Leaderboard</h1>
         <div />
       </div>
+
+      {playerRank > 0 && (
+        <div className="text-center mb-4 bg-primary/10 border border-primary/30 rounded-xl p-3">
+          <p className="text-xs text-muted-foreground">Your Rank</p>
+          <p className="text-2xl font-bold font-mono text-primary">#{playerRank}</p>
+        </div>
+      )}
 
       <div className="text-center mb-6 bg-card border border-border rounded-xl p-3">
         <p className="text-xs text-muted-foreground">Weekly reset in</p>
@@ -66,19 +94,28 @@ export default function LeaderboardScreen() {
       </div>
 
       <div className="space-y-2">
-        {entries.map((entry, i) => (
-          <div
-            key={entry.country_code}
-            className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 transition-colors hover:border-primary/30"
-          >
-            <span className="text-xl w-8 text-center font-mono">
-              {i < 3 ? medals[i] : `#${i + 1}`}
-            </span>
-            <CountryFlag code={entry.country_code} size="sm" />
-            <span className="flex-1 font-semibold">{countryName(entry.country_code)}</span>
-            <span className="font-bold font-mono text-primary">{entry.total_wins} W</span>
-          </div>
-        ))}
+        {entries.map((entry, i) => {
+          const isPlayer = entry.country_code === playerCountry;
+          return (
+            <div
+              key={entry.country_code}
+              className={cn(
+                "flex items-center gap-4 bg-card border rounded-xl p-4 transition-colors",
+                isPlayer ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+              )}
+            >
+              <span className="text-xl w-8 text-center font-mono">
+                {i < 3 ? medals[i] : `#${i + 1}`}
+              </span>
+              <CountryFlag code={entry.country_code} size="sm" />
+              <span className={cn("flex-1 font-semibold", isPlayer && "text-primary")}>{countryName(entry.country_code)}</span>
+              <div className="text-right">
+                <span className="font-bold font-mono text-primary">{entry.wins}W</span>
+                <span className="text-muted-foreground font-mono text-sm ml-1">/ {entry.total}G</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
