@@ -12,6 +12,22 @@ export default function ResultScreen() {
   const { result, xpEarned, myScore, opponentScore, countryCode, opponentCountry, xp, username, reset } = useGameState();
   const [copied, setCopied] = useState(false);
 
+  // Persist XP and update leaderboard after game
+  useEffect(() => {
+    if (xpEarned > 0) {
+      localStorage.setItem('player_xp', String(xp));
+    }
+    // Update leaderboard data
+    if (result && countryCode && countryCode !== 'UN') {
+      const raw = localStorage.getItem('leaderboard_data');
+      const lb: Record<string, number> = raw ? JSON.parse(raw) : {};
+      if (result === 'win') {
+        lb[countryCode] = (lb[countryCode] || 0) + 1;
+      }
+      localStorage.setItem('leaderboard_data', JSON.stringify(lb));
+    }
+  }, []);
+
   const resultConfig = {
     win: { emoji: '🏆', text: 'Victory!', color: 'text-glow-green text-glow-green' },
     loss: { emoji: '😞', text: 'Defeat', color: 'text-destructive' },
