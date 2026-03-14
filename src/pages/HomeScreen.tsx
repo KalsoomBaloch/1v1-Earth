@@ -126,7 +126,7 @@ export default function HomeScreen() {
     const trimmed = newName.trim();
     if (!trimmed) return;
     useGameState.setState({ username: trimmed });
-    localStorage.setItem('gdq_username', trimmed);
+    localStorage.setItem('player_name', trimmed);
     setNameDialogOpen(false);
   }
 
