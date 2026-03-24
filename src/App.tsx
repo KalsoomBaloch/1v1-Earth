@@ -27,6 +27,7 @@ const App = () => (
           <Route path="/duel" element={<DuelScreen />} />
           <Route path="/result" element={<ResultScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
