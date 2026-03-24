@@ -9,6 +9,7 @@ import MatchmakingScreen from "./pages/MatchmakingScreen";
 import DuelScreen from "./pages/DuelScreen";
 import ResultScreen from "./pages/ResultScreen";
 import LeaderboardScreen from "./pages/LeaderboardScreen";
+import ProfileScreen from "./pages/ProfileScreen";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
