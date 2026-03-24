@@ -4,7 +4,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
 import { countryName } from '@/lib/country';
 import { cn } from '@/lib/utils';
-import { playCorrect, playWrong, playCountdownTick, fadeOutBgMusic } from '@/lib/sounds';
+import { playCorrect, playWrong, playCountdownTick, playMusicDuel } from '@/lib/sounds';
 
 export default function DuelScreen() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export default function DuelScreen() {
       navigate('/');
       return;
     }
-    fadeOutBgMusic();
+    playMusicDuel();
     setDuelPhase('playing');
     startTimer();
     simulateOpponent(0);

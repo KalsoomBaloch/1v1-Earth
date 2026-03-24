@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameState } from '@/hooks/useGameState';
 import { countryToFlag } from '@/lib/country';
@@ -22,6 +22,56 @@ const AVATAR_OPTIONS = [
   { emoji: '🚀', label: 'Rocket' },
 ];
 
+const ALL_COUNTRIES: { code: string; name: string }[] = [
+  { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
+  { code: 'AD', name: 'Andorra' }, { code: 'AO', name: 'Angola' }, { code: 'AR', name: 'Argentina' },
+  { code: 'AM', name: 'Armenia' }, { code: 'AU', name: 'Australia' }, { code: 'AT', name: 'Austria' },
+  { code: 'AZ', name: 'Azerbaijan' }, { code: 'BS', name: 'Bahamas' }, { code: 'BH', name: 'Bahrain' },
+  { code: 'BD', name: 'Bangladesh' }, { code: 'BB', name: 'Barbados' }, { code: 'BY', name: 'Belarus' },
+  { code: 'BE', name: 'Belgium' }, { code: 'BZ', name: 'Belize' }, { code: 'BJ', name: 'Benin' },
+  { code: 'BT', name: 'Bhutan' }, { code: 'BO', name: 'Bolivia' }, { code: 'BA', name: 'Bosnia' },
+  { code: 'BW', name: 'Botswana' }, { code: 'BR', name: 'Brazil' }, { code: 'BN', name: 'Brunei' },
+  { code: 'BG', name: 'Bulgaria' }, { code: 'KH', name: 'Cambodia' }, { code: 'CM', name: 'Cameroon' },
+  { code: 'CA', name: 'Canada' }, { code: 'CL', name: 'Chile' }, { code: 'CN', name: 'China' },
+  { code: 'CO', name: 'Colombia' }, { code: 'CR', name: 'Costa Rica' }, { code: 'HR', name: 'Croatia' },
+  { code: 'CU', name: 'Cuba' }, { code: 'CY', name: 'Cyprus' }, { code: 'CZ', name: 'Czech Republic' },
+  { code: 'DK', name: 'Denmark' }, { code: 'DO', name: 'Dominican Republic' }, { code: 'EC', name: 'Ecuador' },
+  { code: 'EG', name: 'Egypt' }, { code: 'SV', name: 'El Salvador' }, { code: 'EE', name: 'Estonia' },
+  { code: 'ET', name: 'Ethiopia' }, { code: 'FI', name: 'Finland' }, { code: 'FR', name: 'France' },
+  { code: 'GE', name: 'Georgia' }, { code: 'DE', name: 'Germany' }, { code: 'GH', name: 'Ghana' },
+  { code: 'GR', name: 'Greece' }, { code: 'GT', name: 'Guatemala' }, { code: 'HN', name: 'Honduras' },
+  { code: 'HK', name: 'Hong Kong' }, { code: 'HU', name: 'Hungary' }, { code: 'IS', name: 'Iceland' },
+  { code: 'IN', name: 'India' }, { code: 'ID', name: 'Indonesia' }, { code: 'IR', name: 'Iran' },
+  { code: 'IQ', name: 'Iraq' }, { code: 'IE', name: 'Ireland' }, { code: 'IL', name: 'Israel' },
+  { code: 'IT', name: 'Italy' }, { code: 'JM', name: 'Jamaica' }, { code: 'JP', name: 'Japan' },
+  { code: 'JO', name: 'Jordan' }, { code: 'KZ', name: 'Kazakhstan' }, { code: 'KE', name: 'Kenya' },
+  { code: 'KW', name: 'Kuwait' }, { code: 'KG', name: 'Kyrgyzstan' }, { code: 'LA', name: 'Laos' },
+  { code: 'LV', name: 'Latvia' }, { code: 'LB', name: 'Lebanon' }, { code: 'LY', name: 'Libya' },
+  { code: 'LT', name: 'Lithuania' }, { code: 'LU', name: 'Luxembourg' }, { code: 'MG', name: 'Madagascar' },
+  { code: 'MY', name: 'Malaysia' }, { code: 'MV', name: 'Maldives' }, { code: 'ML', name: 'Mali' },
+  { code: 'MT', name: 'Malta' }, { code: 'MX', name: 'Mexico' }, { code: 'MD', name: 'Moldova' },
+  { code: 'MN', name: 'Mongolia' }, { code: 'ME', name: 'Montenegro' }, { code: 'MA', name: 'Morocco' },
+  { code: 'MZ', name: 'Mozambique' }, { code: 'MM', name: 'Myanmar' }, { code: 'NA', name: 'Namibia' },
+  { code: 'NP', name: 'Nepal' }, { code: 'NL', name: 'Netherlands' }, { code: 'NZ', name: 'New Zealand' },
+  { code: 'NI', name: 'Nicaragua' }, { code: 'NE', name: 'Niger' }, { code: 'NG', name: 'Nigeria' },
+  { code: 'KP', name: 'North Korea' }, { code: 'MK', name: 'North Macedonia' }, { code: 'NO', name: 'Norway' },
+  { code: 'OM', name: 'Oman' }, { code: 'PK', name: 'Pakistan' }, { code: 'PA', name: 'Panama' },
+  { code: 'PY', name: 'Paraguay' }, { code: 'PE', name: 'Peru' }, { code: 'PH', name: 'Philippines' },
+  { code: 'PL', name: 'Poland' }, { code: 'PT', name: 'Portugal' }, { code: 'QA', name: 'Qatar' },
+  { code: 'RO', name: 'Romania' }, { code: 'RU', name: 'Russia' }, { code: 'RW', name: 'Rwanda' },
+  { code: 'SA', name: 'Saudi Arabia' }, { code: 'SN', name: 'Senegal' }, { code: 'RS', name: 'Serbia' },
+  { code: 'SG', name: 'Singapore' }, { code: 'SK', name: 'Slovakia' }, { code: 'SI', name: 'Slovenia' },
+  { code: 'SO', name: 'Somalia' }, { code: 'ZA', name: 'South Africa' }, { code: 'KR', name: 'South Korea' },
+  { code: 'ES', name: 'Spain' }, { code: 'LK', name: 'Sri Lanka' }, { code: 'SD', name: 'Sudan' },
+  { code: 'SE', name: 'Sweden' }, { code: 'CH', name: 'Switzerland' }, { code: 'SY', name: 'Syria' },
+  { code: 'TW', name: 'Taiwan' }, { code: 'TZ', name: 'Tanzania' }, { code: 'TH', name: 'Thailand' },
+  { code: 'TN', name: 'Tunisia' }, { code: 'TR', name: 'Turkey' }, { code: 'UG', name: 'Uganda' },
+  { code: 'UA', name: 'Ukraine' }, { code: 'AE', name: 'UAE' }, { code: 'GB', name: 'United Kingdom' },
+  { code: 'US', name: 'United States' }, { code: 'UY', name: 'Uruguay' }, { code: 'UZ', name: 'Uzbekistan' },
+  { code: 'VE', name: 'Venezuela' }, { code: 'VN', name: 'Vietnam' }, { code: 'YE', name: 'Yemen' },
+  { code: 'ZM', name: 'Zambia' }, { code: 'ZW', name: 'Zimbabwe' },
+];
+
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { username, countryCode, xp } = useGameState();
@@ -31,6 +81,8 @@ export default function ProfileScreen() {
   );
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(username);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
 
   const level = Math.floor(xp / 200) + 1;
   const leaderboard = JSON.parse(localStorage.getItem('leaderboard_data') || '{}');
@@ -38,7 +90,13 @@ export default function ProfileScreen() {
   const totalWins = myStats.wins || 0;
   const totalLosses = myStats.losses || 0;
 
-  const countryName = getCountryName(countryCode);
+  const currentCountryName = ALL_COUNTRIES.find(c => c.code === countryCode)?.name || countryCode;
+
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch.trim()) return ALL_COUNTRIES;
+    const q = countrySearch.toLowerCase();
+    return ALL_COUNTRIES.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q));
+  }, [countrySearch]);
 
   function selectAvatar(emoji: string) {
     playClick();
@@ -52,6 +110,14 @@ export default function ProfileScreen() {
     useGameState.setState({ username: trimmed });
     localStorage.setItem('player_name', trimmed);
     setEditingName(false);
+  }
+
+  function selectCountry(code: string) {
+    playClick();
+    useGameState.setState({ countryCode: code });
+    localStorage.setItem('player_country', code);
+    setShowCountryPicker(false);
+    setCountrySearch('');
   }
 
   return (
@@ -95,10 +161,53 @@ export default function ProfileScreen() {
         </div>
 
         {/* Country */}
-        <div className="flex items-center gap-2 text-muted-foreground text-sm mb-6">
-          <span className="text-lg">{countryToFlag(countryCode)}</span>
-          <span>{countryName}</span>
+        <div className="flex flex-col items-center gap-1 mb-6">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <span className="text-lg">{countryToFlag(countryCode)}</span>
+            <span>{currentCountryName}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { playClick(); setShowCountryPicker(!showCountryPicker); }}
+            className="text-xs h-7 px-3 mt-1"
+          >
+            🌍 Change Country
+          </Button>
         </div>
+
+        {/* Country Picker */}
+        {showCountryPicker && (
+          <div className="w-full rounded-xl bg-card border border-border p-4 mb-6 animate-in fade-in slide-in-from-top-2">
+            <Input
+              value={countrySearch}
+              onChange={(e) => setCountrySearch(e.target.value)}
+              placeholder="Search country..."
+              className="mb-3 h-9 text-sm"
+              autoFocus
+            />
+            <div className="max-h-[240px] overflow-y-auto space-y-1">
+              {filteredCountries.map(({ code, name }) => (
+                <button
+                  key={code}
+                  onClick={() => selectCountry(code)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
+                    code === countryCode
+                      ? 'bg-primary/20 border border-primary'
+                      : 'hover:bg-secondary/80'
+                  }`}
+                >
+                  <span className="text-lg">{countryToFlag(code)}</span>
+                  <span className="flex-1">{name}</span>
+                  {code === countryCode && <span className="text-primary text-xs">✓</span>}
+                </button>
+              ))}
+              {filteredCountries.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No countries found</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Avatar Selection */}
         <div className="w-full rounded-xl bg-card border border-border p-4 mb-6">
@@ -143,23 +252,4 @@ function StatBox({ label, value, color }: { label: string; value: number; color?
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
-}
-
-function getCountryName(code: string): string {
-  const map: Record<string, string> = {
-    AF: 'Afghanistan', AL: 'Albania', DZ: 'Algeria', AR: 'Argentina', AU: 'Australia',
-    AT: 'Austria', BD: 'Bangladesh', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
-    CL: 'Chile', CN: 'China', CO: 'Colombia', HR: 'Croatia', CZ: 'Czech Republic',
-    DK: 'Denmark', EG: 'Egypt', FI: 'Finland', FR: 'France', DE: 'Germany',
-    GH: 'Ghana', GR: 'Greece', HU: 'Hungary', IN: 'India', ID: 'Indonesia',
-    IR: 'Iran', IQ: 'Iraq', IE: 'Ireland', IL: 'Israel', IT: 'Italy',
-    JP: 'Japan', KE: 'Kenya', KR: 'South Korea', MY: 'Malaysia', MX: 'Mexico',
-    MA: 'Morocco', NL: 'Netherlands', NZ: 'New Zealand', NG: 'Nigeria', NO: 'Norway',
-    PK: 'Pakistan', PE: 'Peru', PH: 'Philippines', PL: 'Poland', PT: 'Portugal',
-    RO: 'Romania', RU: 'Russia', SA: 'Saudi Arabia', SG: 'Singapore', ZA: 'South Africa',
-    ES: 'Spain', SE: 'Sweden', CH: 'Switzerland', TH: 'Thailand', TR: 'Turkey',
-    UA: 'Ukraine', AE: 'UAE', GB: 'United Kingdom', US: 'United States', VN: 'Vietnam',
-    UN: 'Unknown',
-  };
-  return map[code] || code;
 }
