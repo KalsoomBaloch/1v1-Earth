@@ -9,6 +9,7 @@ import MatchmakingScreen from "./pages/MatchmakingScreen";
 import DuelScreen from "./pages/DuelScreen";
 import ResultScreen from "./pages/ResultScreen";
 import LeaderboardScreen from "./pages/LeaderboardScreen";
+import ProfileScreen from "./pages/ProfileScreen";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/duel" element={<DuelScreen />} />
           <Route path="/result" element={<ResultScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
