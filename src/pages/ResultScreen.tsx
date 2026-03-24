@@ -6,7 +6,7 @@ import { countryName } from '@/lib/country';
 import { XpBar } from '@/components/XpBar';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { playVictory, playDefeat, playClick } from '@/lib/sounds';
+import { playVictory, playDefeat, playClick, playMusicVictory, playMusicDefeat } from '@/lib/sounds';
 
 export default function ResultScreen() {
   const navigate = useNavigate();
@@ -17,8 +17,9 @@ export default function ResultScreen() {
     if (xpEarned > 0) {
       localStorage.setItem('player_xp', String(xp));
     }
-    if (result === 'win') playVictory();
-    else if (result === 'loss') playDefeat();
+    if (result === 'win') { playVictory(); playMusicVictory(); }
+    else if (result === 'loss') { playDefeat(); playMusicDefeat(); }
+    else { playMusicVictory(); }
 
     if (result && countryCode && countryCode !== 'UN') {
       const raw = localStorage.getItem('leaderboard_data');

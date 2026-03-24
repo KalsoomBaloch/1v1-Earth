@@ -5,7 +5,7 @@ import { countryName } from '@/lib/country';
 import { useGameState } from '@/hooks/useGameState';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { playClick } from '@/lib/sounds';
+import { playClick, playMusicLeaderboard } from '@/lib/sounds';
 
 interface LeaderboardEntry {
   country_code: string;
@@ -17,7 +17,6 @@ interface LeaderboardEntry {
 function loadLeaderboard(): LeaderboardEntry[] {
   const raw = localStorage.getItem('leaderboard_data');
   const lb: Record<string, { wins: number; losses: number }> = raw ? JSON.parse(raw) : {};
-  // Seed defaults so board isn't empty on first visit
   const defaults: Record<string, { wins: number; losses: number }> = {
     US: { wins: 142, losses: 58 }, GB: { wins: 98, losses: 42 }, DE: { wins: 87, losses: 39 },
     JP: { wins: 76, losses: 34 }, BR: { wins: 65, losses: 30 }, FR: { wins: 54, losses: 26 },
@@ -25,11 +24,9 @@ function loadLeaderboard(): LeaderboardEntry[] {
     KR: { wins: 29, losses: 11 },
   };
   const merged: Record<string, { wins: number; losses: number }> = {};
-  // Add defaults
   for (const [code, val] of Object.entries(defaults)) {
     merged[code] = { ...val };
   }
-  // Merge real data on top
   for (const [code, val] of Object.entries(lb)) {
     if (merged[code]) {
       merged[code].wins += val.wins;
@@ -52,6 +49,7 @@ export default function LeaderboardScreen() {
   const playerRank = entries.findIndex(e => e.country_code === playerCountry) + 1;
 
   useEffect(() => {
+    playMusicLeaderboard();
     updateResetTimer();
     const timerInterval = setInterval(updateResetTimer, 1000);
     return () => clearInterval(timerInterval);

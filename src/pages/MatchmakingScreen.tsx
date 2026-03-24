@@ -5,7 +5,7 @@ import { fetchQuestions } from '@/lib/trivia';
 import { CountryFlag } from '@/components/CountryFlag';
 import { GlobeSpinner } from '@/components/GlobeSpinner';
 import { Button } from '@/components/ui/button';
-import { playMatchFound, playClick } from '@/lib/sounds';
+import { playMatchFound, playClick, playMusicMatchmaking } from '@/lib/sounds';
 
 const FAKE_COUNTRIES = ['US', 'GB', 'DE', 'FR', 'JP', 'BR', 'IN', 'CA', 'AU', 'KR', 'MX', 'ES', 'IT', 'NL', 'SE'];
 
@@ -22,6 +22,7 @@ export default function MatchmakingScreen() {
       navigate('/');
       return;
     }
+    playMusicMatchmaking();
     simulateMatchmaking();
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);

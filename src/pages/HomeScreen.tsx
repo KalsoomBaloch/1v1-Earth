@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { detectCountry } from '@/lib/country';
-import { playClick, startBgMusic } from '@/lib/sounds';
+import { playClick, playMusicHome } from '@/lib/sounds';
 import { useGameState } from '@/hooks/useGameState';
 import { Button } from '@/components/ui/button';
 import { SpaceBackground } from '@/components/SpaceBackground';
@@ -22,6 +22,16 @@ export default function HomeScreen() {
     const stored = localStorage.getItem('player_avatar') || '🌍';
     setAvatar(stored);
   }, [playerId, username]);
+
+  // Start home music on first interaction
+  useEffect(() => {
+    const handler = () => { playMusicHome(); window.removeEventListener('click', handler); };
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, []);
+
+  // Also play home music when screen mounts (if audio already unlocked)
+  useEffect(() => { playMusicHome(); }, []);
 
   async function initPlayer() {
     try {
@@ -69,13 +79,6 @@ export default function HomeScreen() {
     playClick();
     navigate('/matchmaking');
   }
-
-  // Start background music on first interaction
-  useEffect(() => {
-    const handler = () => { startBgMusic(); window.removeEventListener('click', handler); };
-    window.addEventListener('click', handler);
-    return () => window.removeEventListener('click', handler);
-  }, []);
 
   const level = Math.floor(xp / 200) + 1;
 
