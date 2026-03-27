@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Space Grotesk", "sans-serif"],
+        sans: ["Rajdhani", "sans-serif"],
+        display: ["Orbitron", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
@@ -62,10 +63,11 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         glow: {
+          cyan: "hsl(var(--glow-cyan))",
           blue: "hsl(var(--glow-blue))",
-          green: "hsl(var(--glow-green))",
           red: "hsl(var(--glow-red))",
           gold: "hsl(var(--glow-gold))",
+          green: "hsl(var(--glow-green))",
         },
       },
       borderRadius: {

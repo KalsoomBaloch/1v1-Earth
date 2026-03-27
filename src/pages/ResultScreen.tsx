@@ -4,9 +4,9 @@ import { useGameState } from '@/hooks/useGameState';
 import { CountryFlag } from '@/components/CountryFlag';
 import { countryName } from '@/lib/country';
 import { XpBar } from '@/components/XpBar';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { playVictory, playDefeat, playClick, playMusicVictory, playMusicDefeat } from '@/lib/sounds';
+import { SpaceBackground } from '@/components/SpaceBackground';
 
 export default function ResultScreen() {
   const navigate = useNavigate();
@@ -14,9 +14,7 @@ export default function ResultScreen() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (xpEarned > 0) {
-      localStorage.setItem('player_xp', String(xp));
-    }
+    if (xpEarned > 0) localStorage.setItem('player_xp', String(xp));
     if (result === 'win') { playVictory(); playMusicVictory(); }
     else if (result === 'loss') { playDefeat(); playMusicDefeat(); }
     else { playMusicVictory(); }
@@ -37,24 +35,15 @@ export default function ResultScreen() {
   }, []);
 
   const resultConfig = {
-    win: { emoji: '🏆', text: 'Victory!', color: 'text-glow-green text-glow-green' },
-    loss: { emoji: '😞', text: 'Defeat', color: 'text-destructive' },
-    draw: { emoji: '🤝', text: 'Draw!', color: 'text-glow-gold text-glow-gold' },
+    win: { emoji: '🏆', text: 'VICTORY', animClass: 'text-primary text-glow-cyan animate-victory-pulse font-display' },
+    loss: { emoji: '💀', text: 'DEFEAT', animClass: 'text-destructive text-glow-red animate-defeat-fade font-display' },
+    draw: { emoji: '🤝', text: 'DRAW', animClass: 'text-glow-gold text-glow-gold font-display' },
   };
 
   const config = result ? resultConfig[result] : resultConfig.draw;
 
-  function handleRematch() {
-    playClick();
-    reset();
-    navigate('/matchmaking');
-  }
-
-  function handleNewOpponent() {
-    playClick();
-    reset();
-    navigate('/');
-  }
+  function handleRematch() { playClick(); reset(); navigate('/matchmaking'); }
+  function handleNewOpponent() { playClick(); reset(); navigate('/'); }
 
   function handleShare() {
     playClick();
@@ -63,10 +52,9 @@ export default function ResultScreen() {
       const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
       return String.fromCodePoint(...codePoints);
     };
-
-    const resultEmoji = result === 'win' ? '🏆' : result === 'loss' ? '😞' : '🤝';
+    const resultEmoji = result === 'win' ? '🏆' : result === 'loss' ? '💀' : '🤝';
     const text = [
-      `${resultEmoji} Global Duel Quest ${resultEmoji}`,
+      `${resultEmoji} 1v1 Earth ${resultEmoji}`,
       '',
       `${flag(countryCode)} ${countryName(countryCode)} ${myScore} - ${opponentScore} ${countryName(opponentCountry)} ${flag(opponentCountry)}`,
       '',
@@ -75,7 +63,6 @@ export default function ResultScreen() {
       '',
       '🌍 Play at global-duel-quest.lovable.app',
     ].join('\n');
-
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       toast.success('Result copied to clipboard!');
@@ -84,50 +71,57 @@ export default function ResultScreen() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 max-w-[420px] mx-auto">
-      <div className="text-center mb-8">
-        <span className="text-7xl mb-4 block">{config.emoji}</span>
-        <h1 className={`text-4xl font-bold ${config.color}`}>{config.text}</h1>
-      </div>
+    <div className="relative min-h-screen">
+      <SpaceBackground />
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-8 max-w-[420px] mx-auto">
+        {/* Dramatic result */}
+        <div className="text-center mb-8 animate-dramatic-reveal">
+          <span className="text-8xl mb-4 block">{config.emoji}</span>
+          <h1 className={`text-5xl font-black tracking-[0.2em] ${config.animClass}`}>{config.text}</h1>
+        </div>
 
-      <div className="w-full bg-card border border-border rounded-xl p-6 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="text-center">
-            <CountryFlag code={countryCode} size="lg" />
-            <p className="text-xs text-muted-foreground mt-1">{countryName(countryCode)}</p>
-            <p className="text-2xl font-bold font-mono mt-1">{myScore}</p>
-          </div>
-          <div className="text-3xl text-muted-foreground font-bold">vs</div>
-          <div className="text-center">
-            <CountryFlag code={opponentCountry} size="lg" />
-            <p className="text-xs text-muted-foreground mt-1">{countryName(opponentCountry)}</p>
-            <p className="text-2xl font-bold font-mono mt-1">{opponentScore}</p>
+        {/* Score card */}
+        <div className="w-full glass-card-strong rounded-xl p-6 mb-4 shine-sweep">
+          <div className="flex items-center justify-between">
+            <div className="text-center">
+              <CountryFlag code={countryCode} size="lg" />
+              <p className="text-[10px] text-primary/60 mt-1 font-display tracking-wider">{countryName(countryCode)}</p>
+              <p className="text-3xl font-black font-mono mt-1 text-primary text-glow-cyan">{myScore}</p>
+            </div>
+            <div className="text-3xl font-display font-black text-primary/30">VS</div>
+            <div className="text-center">
+              <CountryFlag code={opponentCountry} size="lg" />
+              <p className="text-[10px] text-primary/60 mt-1 font-display tracking-wider">{countryName(opponentCountry)}</p>
+              <p className="text-3xl font-black font-mono mt-1 text-destructive text-glow-red">{opponentScore}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <Button
-        variant="outline"
-        onClick={handleShare}
-        className="w-full mb-6 border-border text-muted-foreground hover:text-foreground"
-      >
-        {copied ? '✅ Copied!' : '📋 Share Result'}
-      </Button>
+        {/* Share */}
+        <button
+          onClick={handleShare}
+          className="w-full mb-6 glass-card rounded-xl py-3 text-primary/70 hover:text-primary transition-colors font-display text-sm tracking-widest"
+        >
+          {copied ? '✅ COPIED!' : '📋 SHARE RESULT'}
+        </button>
 
-      <div className="w-full mb-8">
-        <XpBar current={xp} gained={xpEarned} />
-      </div>
+        {/* XP bar */}
+        <div className="w-full mb-8">
+          <XpBar current={xp} gained={xpEarned} />
+        </div>
 
-      <div className="w-full space-y-3">
-        <Button onClick={handleRematch} className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground box-glow-blue">
-          ⚔️ Rematch
-        </Button>
-        <Button onClick={handleNewOpponent} variant="secondary" className="w-full h-14 text-lg font-bold">
-          🌍 Find New Opponent
-        </Button>
-        <Button variant="ghost" onClick={() => { playClick(); navigate('/leaderboard'); }} className="w-full text-muted-foreground">
-          🏆 Leaderboard
-        </Button>
+        {/* Actions */}
+        <div className="w-full space-y-3">
+          <button onClick={handleRematch} className="w-full h-14 text-lg font-display font-bold tracking-widest rounded-xl btn-epic text-primary-foreground">
+            ⚔️ REMATCH
+          </button>
+          <button onClick={handleNewOpponent} className="w-full h-14 text-lg font-display font-bold tracking-widest rounded-xl glass-card-strong text-primary hover:box-glow-cyan transition-all">
+            🌍 NEW OPPONENT
+          </button>
+          <button onClick={() => { playClick(); navigate('/leaderboard'); }} className="w-full text-muted-foreground hover:text-primary transition-colors font-display text-sm tracking-widest py-2">
+            🏆 LEADERBOARD
+          </button>
+        </div>
       </div>
     </div>
   );
