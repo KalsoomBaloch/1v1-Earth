@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { detectCountry } from '@/lib/country';
 import { playClick, playMusicHome } from '@/lib/sounds';
 import { useGameState } from '@/hooks/useGameState';
-import { Button } from '@/components/ui/button';
 import { SpaceBackground } from '@/components/SpaceBackground';
 
 export default function HomeScreen() {
@@ -13,55 +12,37 @@ export default function HomeScreen() {
   const [onlineCount] = useState(() => Math.floor(Math.random() * 500) + 100);
   const [avatar, setAvatar] = useState(() => localStorage.getItem('player_avatar') || '🌍');
 
-  useEffect(() => {
-    initPlayer();
-  }, []);
+  useEffect(() => { initPlayer(); }, []);
 
-  // Refresh avatar when returning from profile
   useEffect(() => {
     const stored = localStorage.getItem('player_avatar') || '🌍';
     setAvatar(stored);
   }, [playerId, username]);
 
-  // Start home music on first interaction
   useEffect(() => {
     const handler = () => { playMusicHome(); window.removeEventListener('click', handler); };
     window.addEventListener('click', handler);
     return () => window.removeEventListener('click', handler);
   }, []);
 
-  // Also play home music when screen mounts (if audio already unlocked)
   useEffect(() => { playMusicHome(); }, []);
 
   async function initPlayer() {
     try {
       const existing = useGameState.getState();
-      if (existing.playerId) {
-        setLoading(false);
-        return;
-      }
-
+      if (existing.playerId) { setLoading(false); return; }
       const id = crypto.randomUUID();
       const savedName = localStorage.getItem('player_name');
       const savedCountry = localStorage.getItem('player_country');
       const savedXp = Number(localStorage.getItem('player_xp') || '0');
-
       let finalCountry = savedCountry;
       if (!finalCountry) {
         finalCountry = await detectCountry();
         localStorage.setItem('player_country', finalCountry);
       }
-
       const name = savedName || `Player_${id.slice(0, 4)}`;
       if (!savedName) localStorage.setItem('player_name', name);
-
-      useGameState.setState({
-        playerId: id,
-        userId: id,
-        countryCode: finalCountry,
-        username: name,
-        xp: savedXp,
-      });
+      useGameState.setState({ playerId: id, userId: id, countryCode: finalCountry, username: name, xp: savedXp });
     } catch (e) {
       console.error('Init failed:', e);
       const id = crypto.randomUUID();
@@ -84,10 +65,10 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center" style={{ background: '#050810' }}>
         <div className="text-center space-y-4">
           <span className="text-6xl animate-float inline-block">🌍</span>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground font-display tracking-wider">LOADING...</p>
         </div>
       </div>
     );
@@ -101,50 +82,52 @@ export default function HomeScreen() {
       <div className="relative z-10 flex items-center justify-between px-4 py-3">
         <button
           onClick={() => { playClick(); navigate('/profile'); }}
-          className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-xl hover:border-primary hover:scale-105 transition-all"
+          className="w-11 h-11 rounded-full glass-card flex items-center justify-center text-xl hover:scale-110 transition-all animate-pulse-glow"
           title="Profile"
         >
           {avatar}
         </button>
-        <h1 className="text-lg font-bold text-glow-blue tracking-tight">1v1 Earth</h1>
-        {/* MuteButton is rendered globally in App.tsx — this is a spacer */}
-        <div className="w-10" />
+        <h1 className="font-display text-lg font-bold text-glow-cyan tracking-widest text-primary">
+          1v1 EARTH
+        </h1>
+        <div className="w-11" />
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center px-4" style={{ minHeight: 'calc(100vh - 60px)' }}>
         {/* Player identity */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center text-3xl mb-2">
+        <div className="flex flex-col items-center mb-12">
+          <div className="w-20 h-20 rounded-full glass-card-strong flex items-center justify-center text-4xl mb-3 box-glow-cyan">
             {avatar}
           </div>
-          <p className="text-foreground font-semibold">{username}</p>
-          <p className="text-xs text-muted-foreground font-mono">Level {level} • {xp} XP</p>
+          <p className="text-foreground font-bold text-lg font-display tracking-wide">{username}</p>
+          <p className="text-xs text-primary/70 font-mono tracking-wider">
+            LEVEL {level} • {xp} XP
+          </p>
         </div>
 
-        {/* Find Opponent */}
-        <Button
+        {/* Find Opponent - EPIC button */}
+        <button
           onClick={handleFindOpponent}
           disabled={!playerId}
-          className="w-full max-w-[320px] h-16 text-xl font-bold rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] box-glow-blue mb-6"
+          className="w-full max-w-[320px] h-16 text-xl font-display font-bold tracking-widest rounded-xl btn-epic text-primary-foreground mb-8 disabled:opacity-50"
         >
-          ⚔️ Find Opponent
-        </Button>
+          ⚔️ FIND OPPONENT
+        </button>
 
         {/* Online count */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-          <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          <span className="font-mono">{onlineCount} players online</span>
+        <div className="flex items-center gap-2 text-sm mb-10">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="font-mono text-primary/70 tracking-wider">{onlineCount} PLAYERS ONLINE</span>
         </div>
 
         {/* Leaderboard */}
-        <Button
-          variant="ghost"
+        <button
           onClick={() => { playClick(); navigate('/leaderboard'); }}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-primary transition-colors font-display text-sm tracking-widest"
         >
-          🏆 Leaderboard
-        </Button>
+          🏆 LEADERBOARD
+        </button>
       </div>
     </div>
   );

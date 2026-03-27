@@ -3,23 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useGameState } from '@/hooks/useGameState';
 import { countryToFlag } from '@/lib/country';
 import { playClick } from '@/lib/sounds';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpaceBackground } from '@/components/SpaceBackground';
 
 const AVATAR_OPTIONS = [
-  { emoji: '⚔️', label: 'Warrior' },
-  { emoji: '🥷', label: 'Ninja' },
-  { emoji: '🤖', label: 'Robot' },
-  { emoji: '👽', label: 'Alien' },
-  { emoji: '👑', label: 'Crown' },
-  { emoji: '🔥', label: 'Fire' },
-  { emoji: '🐉', label: 'Dragon' },
-  { emoji: '⭐', label: 'Star' },
-  { emoji: '🌍', label: 'Globe' },
-  { emoji: '⚡', label: 'Lightning' },
-  { emoji: '🛡️', label: 'Shield' },
-  { emoji: '🚀', label: 'Rocket' },
+  { emoji: '⚔️', label: 'Warrior' }, { emoji: '🥷', label: 'Ninja' },
+  { emoji: '🤖', label: 'Robot' }, { emoji: '👽', label: 'Alien' },
+  { emoji: '👑', label: 'Crown' }, { emoji: '🔥', label: 'Fire' },
+  { emoji: '🐉', label: 'Dragon' }, { emoji: '⭐', label: 'Star' },
+  { emoji: '🌍', label: 'Globe' }, { emoji: '⚡', label: 'Lightning' },
+  { emoji: '🛡️', label: 'Shield' }, { emoji: '🚀', label: 'Rocket' },
 ];
 
 const ALL_COUNTRIES: { code: string; name: string }[] = [
@@ -76,9 +69,7 @@ export default function ProfileScreen() {
   const navigate = useNavigate();
   const { username, countryCode, xp } = useGameState();
 
-  const [selectedAvatar, setSelectedAvatar] = useState(
-    () => localStorage.getItem('player_avatar') || '🌍'
-  );
+  const [selectedAvatar, setSelectedAvatar] = useState(() => localStorage.getItem('player_avatar') || '🌍');
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState(username);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
@@ -87,8 +78,6 @@ export default function ProfileScreen() {
   const level = Math.floor(xp / 200) + 1;
   const leaderboard = JSON.parse(localStorage.getItem('leaderboard_data') || '{}');
   const myStats = leaderboard[countryCode] || { wins: 0, losses: 0 };
-  const totalWins = myStats.wins || 0;
-  const totalLosses = myStats.losses || 0;
 
   const currentCountryName = ALL_COUNTRIES.find(c => c.code === countryCode)?.name || countryCode;
 
@@ -126,14 +115,17 @@ export default function ProfileScreen() {
       <div className="relative z-10 flex flex-col items-center px-4 py-6 max-w-[420px] mx-auto">
         {/* Back button */}
         <div className="w-full flex items-center mb-6">
-          <Button variant="ghost" size="sm" onClick={() => { playClick(); navigate('/'); }}>
-            ← Back
-          </Button>
+          <button onClick={() => { playClick(); navigate('/'); }} className="text-primary/70 hover:text-primary transition-colors font-display text-sm tracking-widest">
+            ← BACK
+          </button>
         </div>
 
-        {/* Large Avatar */}
-        <div className="w-24 h-24 rounded-full bg-card border-2 border-primary flex items-center justify-center text-5xl mb-4 box-glow-blue">
-          {selectedAvatar}
+        {/* Large Avatar with energy ring */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 rounded-full animate-energy-ring" style={{ border: '2px solid rgba(0, 245, 255, 0.3)' }} />
+          <div className="w-28 h-28 rounded-full glass-card-strong flex items-center justify-center text-6xl box-glow-cyan">
+            {selectedAvatar}
+          </div>
         </div>
 
         {/* Username */}
@@ -144,16 +136,16 @@ export default function ProfileScreen() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 maxLength={20}
-                className="w-40 h-8 text-center text-sm"
+                className="w-40 h-8 text-center text-sm bg-muted border-primary/30"
                 onKeyDown={(e) => e.key === 'Enter' && saveName()}
                 autoFocus
               />
-              <Button size="sm" onClick={saveName} className="h-8 text-xs">Save</Button>
+              <button onClick={saveName} className="btn-epic px-3 py-1 rounded-lg text-xs font-display text-primary-foreground">SAVE</button>
             </div>
           ) : (
             <>
-              <h2 className="text-xl font-bold">{username}</h2>
-              <button onClick={() => { setNewName(username); setEditingName(true); }} className="text-muted-foreground hover:text-foreground transition-colors">
+              <h2 className="text-2xl font-display font-bold text-glow-cyan">{username}</h2>
+              <button onClick={() => { setNewName(username); setEditingName(true); }} className="text-muted-foreground hover:text-primary transition-colors">
                 ✏️
               </button>
             </>
@@ -162,28 +154,26 @@ export default function ProfileScreen() {
 
         {/* Country */}
         <div className="flex flex-col items-center gap-1 mb-6">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <div className="flex items-center gap-2 text-primary/70 text-sm">
             <span className="text-lg">{countryToFlag(countryCode)}</span>
-            <span>{currentCountryName}</span>
+            <span className="font-display tracking-wider">{currentCountryName}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={() => { playClick(); setShowCountryPicker(!showCountryPicker); }}
-            className="text-xs h-7 px-3 mt-1"
+            className="text-xs px-3 py-1 rounded-lg glass-card text-primary/70 hover:text-primary transition-colors font-display tracking-wider mt-1"
           >
-            🌍 Change Country
-          </Button>
+            🌍 CHANGE COUNTRY
+          </button>
         </div>
 
         {/* Country Picker */}
         {showCountryPicker && (
-          <div className="w-full rounded-xl bg-card border border-border p-4 mb-6 animate-in fade-in slide-in-from-top-2">
+          <div className="w-full rounded-xl glass-card-strong p-4 mb-6">
             <Input
               value={countrySearch}
               onChange={(e) => setCountrySearch(e.target.value)}
               placeholder="Search country..."
-              className="mb-3 h-9 text-sm"
+              className="mb-3 h-9 text-sm bg-muted border-primary/20"
               autoFocus
             />
             <div className="max-h-[240px] overflow-y-auto space-y-1">
@@ -191,10 +181,10 @@ export default function ProfileScreen() {
                 <button
                   key={code}
                   onClick={() => selectCountry(code)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all text-left ${
                     code === countryCode
-                      ? 'bg-primary/20 border border-primary'
-                      : 'hover:bg-secondary/80'
+                      ? 'glass-card-strong text-primary box-glow-cyan'
+                      : 'hover:bg-primary/5'
                   }`}
                 >
                   <span className="text-lg">{countryToFlag(code)}</span>
@@ -210,8 +200,8 @@ export default function ProfileScreen() {
         )}
 
         {/* Avatar Selection */}
-        <div className="w-full rounded-xl bg-card border border-border p-4 mb-6">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Choose Avatar</h3>
+        <div className="w-full rounded-xl glass-card-strong p-4 mb-6 shine-sweep">
+          <h3 className="text-xs font-display text-primary/60 mb-3 tracking-[0.2em]">CHOOSE AVATAR</h3>
           <div className="grid grid-cols-4 gap-3">
             {AVATAR_OPTIONS.map(({ emoji, label }) => (
               <button
@@ -219,25 +209,25 @@ export default function ProfileScreen() {
                 onClick={() => selectAvatar(emoji)}
                 className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-all ${
                   selectedAvatar === emoji
-                    ? 'bg-primary/20 border border-primary box-glow-blue scale-105'
-                    : 'bg-secondary/50 border border-transparent hover:bg-secondary hover:scale-105'
+                    ? 'glass-card-strong box-glow-cyan scale-105 text-primary'
+                    : 'bg-muted/30 hover:bg-muted/50 hover:scale-105'
                 }`}
               >
                 <span className="text-2xl">{emoji}</span>
-                <span className="text-[10px] text-muted-foreground">{label}</span>
+                <span className="text-[10px] text-muted-foreground font-display tracking-wider">{label}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Stats */}
-        <div className="w-full rounded-xl bg-card border border-border p-4">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Stats</h3>
+        <div className="w-full rounded-xl glass-card-strong p-4 shine-sweep">
+          <h3 className="text-xs font-display text-primary/60 mb-3 tracking-[0.2em]">STATS</h3>
           <div className="grid grid-cols-2 gap-3">
-            <StatBox label="Level" value={level} />
+            <StatBox label="LEVEL" value={level} />
             <StatBox label="XP" value={xp} />
-            <StatBox label="Total Wins" value={totalWins} color="text-green-400" />
-            <StatBox label="Total Losses" value={totalLosses} color="text-red-400" />
+            <StatBox label="WINS" value={myStats.wins || 0} glow="cyan" />
+            <StatBox label="LOSSES" value={myStats.losses || 0} glow="red" />
           </div>
         </div>
       </div>
@@ -245,11 +235,12 @@ export default function ProfileScreen() {
   );
 }
 
-function StatBox({ label, value, color }: { label: string; value: number; color?: string }) {
+function StatBox({ label, value, glow }: { label: string; value: number; glow?: string }) {
+  const glowClass = glow === 'cyan' ? 'text-primary text-glow-cyan' : glow === 'red' ? 'text-destructive text-glow-red' : 'text-foreground';
   return (
-    <div className="bg-secondary/50 rounded-lg p-3 text-center">
-      <p className={`text-2xl font-bold font-mono ${color || 'text-foreground'}`}>{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="glass-card rounded-lg p-3 text-center">
+      <p className={`text-2xl font-bold font-mono ${glowClass}`}>{value}</p>
+      <p className="text-[10px] text-muted-foreground font-display tracking-[0.15em]">{label}</p>
     </div>
   );
 }

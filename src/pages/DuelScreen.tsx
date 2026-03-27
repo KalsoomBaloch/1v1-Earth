@@ -5,6 +5,7 @@ import { CountryFlag } from '@/components/CountryFlag';
 import { countryName } from '@/lib/country';
 import { cn } from '@/lib/utils';
 import { playCorrect, playWrong, playCountdownTick, playMusicDuel } from '@/lib/sounds';
+import { SpaceBackground } from '@/components/SpaceBackground';
 
 export default function DuelScreen() {
   const navigate = useNavigate();
@@ -22,15 +23,11 @@ export default function DuelScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
-    if (!roomId || !questions.length) {
-      navigate('/');
-      return;
-    }
+    if (!roomId || !questions.length) { navigate('/'); return; }
     playMusicDuel();
     setDuelPhase('playing');
     startTimer();
     simulateOpponent(0);
-
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
@@ -62,40 +59,27 @@ export default function DuelScreen() {
       const t = useGameState.getState().timeLeft - 1;
       setTimeLeft(t);
       if (t > 0) playCountdownTick();
-      if (t <= 0) {
-        clearInterval(timerRef.current);
-        handleTimerEnd();
-      }
+      if (t <= 0) { clearInterval(timerRef.current); handleTimerEnd(); }
     }, 1000);
   }
 
   const handleTimerEnd = useCallback(() => {
     const state = useGameState.getState();
-    if (state.myAnswers[state.currentQuestion] === null) {
-      doSubmitAnswer(null);
-    }
+    if (state.myAnswers[state.currentQuestion] === null) doSubmitAnswer(null);
   }, []);
 
   function doSubmitAnswer(answer: string | null) {
     const state = useGameState.getState();
     const qi = state.currentQuestion;
     const timeTaken = (Date.now() - answerStartTime) / 1000;
-
     submitAnswer(qi, answer || '');
-
     const isCorrect = answer === state.questions[qi]?.correct_answer;
     setFlashState(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) playCorrect(); else playWrong();
-
-    const speedBonus = timeTaken < 3 ? 10 : 0;
     setRevealed(true);
-
     setTimeout(() => {
-      if (qi >= 4) {
-        finishDuel(speedBonus);
-      } else {
-        nextQuestion();
-      }
+      if (qi >= 4) finishDuel(timeTaken < 3 ? 10 : 0);
+      else nextQuestion();
     }, 2000);
   }
 
@@ -108,22 +92,12 @@ export default function DuelScreen() {
 
   function finishDuel(lastSpeedBonus: number) {
     const state = useGameState.getState();
-    const finalMyScore = state.myScore;
-    const finalOppScore = state.opponentScore;
-
     let result: 'win' | 'loss' | 'draw';
     let baseXp: number;
-
-    if (finalMyScore > finalOppScore) {
-      result = 'win'; baseXp = 50;
-    } else if (finalMyScore < finalOppScore) {
-      result = 'loss'; baseXp = 10;
-    } else {
-      result = 'draw'; baseXp = 25;
-    }
-
-    const totalXp = baseXp + lastSpeedBonus;
-    setResult(result, totalXp);
+    if (state.myScore > state.opponentScore) { result = 'win'; baseXp = 50; }
+    else if (state.myScore < state.opponentScore) { result = 'loss'; baseXp = 10; }
+    else { result = 'draw'; baseXp = 25; }
+    setResult(result, baseXp + lastSpeedBonus);
     setDuelPhase('finished');
     navigate('/result');
   }
@@ -132,87 +106,106 @@ export default function DuelScreen() {
   const q = questions[currentQuestion];
   if (!q) return null;
 
+  const timerDanger = timeLeft <= 3;
+
   return (
-    <div className={cn(
-      "flex min-h-screen flex-col px-4 py-6 max-w-[420px] mx-auto transition-colors duration-500",
-      flashState === 'correct' && 'animate-flash-correct',
-      flashState === 'wrong' && 'animate-flash-wrong',
-    )}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <CountryFlag code={countryCode} size="sm" />
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground leading-none">{username}</span>
-            <span className="font-bold text-primary font-mono text-lg">{myScore}</span>
+    <div className="relative min-h-screen">
+      <SpaceBackground />
+      <div className={cn(
+        "relative z-10 flex min-h-screen flex-col px-4 py-6 max-w-[420px] mx-auto transition-colors duration-500",
+        flashState === 'correct' && 'animate-flash-correct',
+        flashState === 'wrong' && 'animate-flash-wrong animate-shake',
+      )}>
+        {/* Score header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 glass-card rounded-xl px-3 py-2">
+            <CountryFlag code={countryCode} size="sm" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-primary/60 font-display tracking-wider leading-none">{username}</span>
+              <span className="font-bold text-primary font-mono text-lg text-glow-cyan">{myScore}</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] text-primary/60 font-display tracking-wider">Q{currentQuestion + 1}/5</span>
+            <p className="text-2xl font-display font-black text-glow-cyan">⚡VS⚡</p>
+          </div>
+          <div className="flex items-center gap-2 glass-card rounded-xl px-3 py-2">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-primary/60 font-display tracking-wider leading-none">{countryName(opponentCountry)}</span>
+              <span className="font-bold text-destructive font-mono text-lg text-glow-red">{opponentScore}</span>
+            </div>
+            <CountryFlag code={opponentCountry} size="sm" />
           </div>
         </div>
-        <div className="text-center">
-          <span className="text-xs text-muted-foreground font-mono">Q{currentQuestion + 1}/5</span>
-          <p className="text-lg font-bold text-muted-foreground">vs</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-muted-foreground leading-none">{countryName(opponentCountry)}</span>
-            <span className="font-bold text-destructive font-mono text-lg">{opponentScore}</span>
-          </div>
-          <CountryFlag code={opponentCountry} size="sm" />
-        </div>
-      </div>
 
-      <div className="mb-6">
-        <div className="h-2 rounded-full bg-secondary overflow-hidden">
-          <div
-            className={cn(
-              "h-full rounded-full transition-all duration-1000 ease-linear",
-              timeLeft > 5 ? "bg-primary" : timeLeft > 2 ? "bg-glow-gold" : "bg-destructive"
-            )}
-            style={{ width: `${(timeLeft / 10) * 100}%` }}
-          />
-        </div>
-        <p className="text-center text-sm font-mono text-muted-foreground mt-1">{timeLeft}s</p>
-      </div>
-
-      <div className="text-center mb-4">
-        {opponentAnswered[currentQuestion] ? (
-          <span className="text-xs text-glow-green font-mono">✓ Opponent answered</span>
-        ) : (
-          <span className="text-xs text-muted-foreground font-mono animate-pulse">Opponent thinking...</span>
-        )}
-      </div>
-
-      <div className="bg-card border border-border rounded-xl p-5 mb-6">
-        <p className="text-lg font-semibold leading-relaxed">{q.question}</p>
-      </div>
-
-      <div className="space-y-3 flex-1">
-        {q.all_answers.map((answer, i) => {
-          const isSelected = selectedAnswer === answer;
-          const isCorrect = answer === q.correct_answer;
-          const showResult = revealed;
-
-          return (
-            <button
-              key={i}
-              onClick={() => handleSelectAnswer(answer)}
-              disabled={!!selectedAnswer || revealed}
+        {/* Timer bar */}
+        <div className="mb-6">
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div
               className={cn(
-                "w-full text-left p-4 rounded-xl border transition-all font-medium",
-                !showResult && !isSelected && "bg-secondary border-border hover:border-primary hover:bg-secondary/80",
-                !showResult && isSelected && "bg-primary/20 border-primary",
-                showResult && isCorrect && "bg-glow-green/20 border-glow-green text-foreground scale-[1.02]",
-                showResult && isSelected && !isCorrect && "bg-destructive/20 border-destructive scale-95 opacity-80",
-                showResult && !isCorrect && !isSelected && "opacity-50",
+                "h-full rounded-full transition-all duration-1000 ease-linear",
+                timerDanger ? "bg-destructive" : "bg-primary",
+                timerDanger && "animate-pulse"
               )}
-            >
-              <span className="mr-3 text-muted-foreground font-mono text-sm">
-                {String.fromCharCode(65 + i)}
-              </span>
-              {answer}
-              {showResult && isCorrect && <span className="float-right">✓</span>}
-              {showResult && isSelected && !isCorrect && <span className="float-right">✗</span>}
-            </button>
-          );
-        })}
+              style={{
+                width: `${(timeLeft / 10) * 100}%`,
+                boxShadow: timerDanger
+                  ? '0 0 15px rgba(255, 60, 60, 0.6)'
+                  : '0 0 15px rgba(0, 245, 255, 0.4)',
+              }}
+            />
+          </div>
+          <p className={cn(
+            "text-center text-sm font-mono mt-1",
+            timerDanger ? "text-destructive text-glow-red font-bold" : "text-primary/60"
+          )}>{timeLeft}s</p>
+        </div>
+
+        {/* Opponent status */}
+        <div className="text-center mb-4">
+          {opponentAnswered[currentQuestion] ? (
+            <span className="text-xs text-primary font-display tracking-wider text-glow-cyan">✓ OPPONENT ANSWERED</span>
+          ) : (
+            <span className="text-xs text-muted-foreground font-display tracking-wider animate-pulse">OPPONENT THINKING...</span>
+          )}
+        </div>
+
+        {/* Question */}
+        <div className="glass-card-strong rounded-xl p-5 mb-6 shine-sweep">
+          <p className="text-lg font-bold leading-relaxed font-display">{q.question}</p>
+        </div>
+
+        {/* Answers */}
+        <div className="space-y-3 flex-1">
+          {q.all_answers.map((answer, i) => {
+            const isSelected = selectedAnswer === answer;
+            const isCorrect = answer === q.correct_answer;
+            const showResult = revealed;
+
+            return (
+              <button
+                key={i}
+                onClick={() => handleSelectAnswer(answer)}
+                disabled={!!selectedAnswer || revealed}
+                className={cn(
+                  "w-full text-left p-4 rounded-xl border transition-all font-semibold font-display tracking-wide",
+                  !showResult && !isSelected && "glass-card hover:box-glow-cyan hover:border-primary/50 hover:scale-[1.02]",
+                  !showResult && isSelected && "glass-card-strong box-glow-cyan",
+                  showResult && isCorrect && "border-primary bg-primary/10 box-glow-cyan scale-[1.02]",
+                  showResult && isSelected && !isCorrect && "border-destructive bg-destructive/10 box-glow-red scale-95 opacity-80",
+                  showResult && !isCorrect && !isSelected && "opacity-30",
+                )}
+              >
+                <span className="mr-3 text-primary/60 font-mono text-sm">
+                  {String.fromCharCode(65 + i)}
+                </span>
+                {answer}
+                {showResult && isCorrect && <span className="float-right text-primary">✓</span>}
+                {showResult && isSelected && !isCorrect && <span className="float-right text-destructive">✗</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
