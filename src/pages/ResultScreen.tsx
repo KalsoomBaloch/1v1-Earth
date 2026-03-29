@@ -116,7 +116,7 @@ export default function ResultScreen() {
             ⚔️ REMATCH
           </button>
           <button onClick={handleNewOpponent} className="w-full h-14 text-lg font-display font-bold tracking-widest rounded-xl glass-card-strong text-primary hover:box-glow-cyan transition-all">
-            🌍 NEW OPPONENT
+            🌍 BACK TO HOME
           </button>
           <button onClick={() => { playClick(); navigate('/leaderboard'); }} className="w-full text-muted-foreground hover:text-primary transition-colors font-display text-sm tracking-widest py-2">
             🏆 LEADERBOARD
