@@ -5,9 +5,16 @@ import { playClick, playMusicHome } from '@/lib/sounds';
 import { useGameState } from '@/hooks/useGameState';
 import { SpaceBackground } from '@/components/SpaceBackground';
 
+const GAMES = [
+  { id: 'trivia', icon: '🧠', name: 'Trivia Duel', desc: 'Battle of knowledge', accent: '185 100% 50%', accentHex: '#00f5ff' },
+  { id: 'tictactoe', icon: '⭕', name: 'Tic Tac Toe', desc: 'Classic strategy', accent: '271 91% 65%', accentHex: '#a855f7' },
+  { id: 'wordscramble', icon: '📝', name: 'Word Scramble', desc: 'Unscramble fastest', accent: '142 71% 45%', accentHex: '#22c55e' },
+  { id: 'hangman', icon: '💀', name: 'Hangman', desc: 'Guess the word', accent: '25 95% 53%', accentHex: '#f97316' },
+];
+
 export default function HomeScreen() {
   const navigate = useNavigate();
-  const { playerId, countryCode, xp, username } = useGameState();
+  const { playerId, xp, username } = useGameState();
   const [loading, setLoading] = useState(true);
   const [onlineCount] = useState(() => Math.floor(Math.random() * 500) + 100);
   const [avatar, setAvatar] = useState(() => localStorage.getItem('player_avatar') || '🌍');
@@ -55,10 +62,10 @@ export default function HomeScreen() {
     }
   }
 
-  function handleFindOpponent() {
+  function handlePlay(gameId: string) {
     if (!playerId) return;
     playClick();
-    navigate('/matchmaking');
+    navigate('/matchmaking', { state: { gameId } });
   }
 
   const level = Math.floor(xp / 200) + 1;
@@ -94,29 +101,63 @@ export default function HomeScreen() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-4" style={{ minHeight: 'calc(100vh - 60px)' }}>
-        {/* Player identity */}
-        <div className="flex flex-col items-center mb-12">
-          <div className="w-20 h-20 rounded-full glass-card-strong flex items-center justify-center text-4xl mb-3 box-glow-cyan">
+      <div className="relative z-10 flex flex-col items-center px-4 pt-4 pb-8">
+        {/* Player info */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-full glass-card-strong flex items-center justify-center text-xl box-glow-cyan">
             {avatar}
           </div>
-          <p className="text-foreground font-bold text-lg font-display tracking-wide">{username}</p>
-          <p className="text-xs text-primary/70 font-mono tracking-wider">
-            LEVEL {level} • {xp} XP
-          </p>
+          <div>
+            <p className="text-foreground font-bold text-sm font-display tracking-wide">{username}</p>
+            <p className="text-xs text-primary/70 font-mono tracking-wider">LVL {level} • {xp} XP</p>
+          </div>
         </div>
 
-        {/* Find Opponent - EPIC button */}
-        <button
-          onClick={handleFindOpponent}
-          disabled={!playerId}
-          className="w-full max-w-[320px] h-16 text-xl font-display font-bold tracking-widest rounded-xl btn-epic text-primary-foreground mb-8 disabled:opacity-50"
-        >
-          ⚔️ FIND OPPONENT
-        </button>
+        {/* Subtitle */}
+        <h2 className="font-display text-xl font-bold tracking-[0.2em] text-glow-cyan text-primary mb-6">
+          SELECT YOUR BATTLE
+        </h2>
+
+        {/* 2x2 Game Grid */}
+        <div className="grid grid-cols-2 gap-4 w-full max-w-[400px] mb-8">
+          {GAMES.map((game) => (
+            <button
+              key={game.id}
+              onClick={() => handlePlay(game.id)}
+              disabled={!playerId}
+              className="group relative flex flex-col items-center rounded-xl p-4 pt-5 pb-4 text-left transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 glass-card"
+              style={{
+                borderColor: game.accentHex,
+                borderWidth: '1px',
+                boxShadow: `0 0 15px ${game.accentHex}33, 0 0 40px ${game.accentHex}11, inset 0 0 15px ${game.accentHex}08`,
+              }}
+            >
+              {/* Hover glow overlay */}
+              <div
+                className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{ boxShadow: `0 0 25px ${game.accentHex}55, 0 0 60px ${game.accentHex}22` }}
+              />
+
+              <span className="text-4xl mb-2">{game.icon}</span>
+              <p className="font-display font-bold text-sm text-foreground tracking-wide text-center">{game.name}</p>
+              <p className="text-xs text-muted-foreground text-center mb-3">{game.desc}</p>
+
+              <span
+                className="font-display text-xs font-bold tracking-[0.2em] px-4 py-1.5 rounded-lg transition-all duration-300 group-hover:scale-105"
+                style={{
+                  background: `linear-gradient(135deg, ${game.accentHex}, ${game.accentHex}99)`,
+                  color: '#050810',
+                  boxShadow: `0 0 12px ${game.accentHex}44`,
+                }}
+              >
+                PLAY
+              </span>
+            </button>
+          ))}
+        </div>
 
         {/* Online count */}
-        <div className="flex items-center gap-2 text-sm mb-10">
+        <div className="flex items-center gap-2 text-sm mb-6">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <span className="font-mono text-primary/70 tracking-wider">{onlineCount} PLAYERS ONLINE</span>
         </div>
