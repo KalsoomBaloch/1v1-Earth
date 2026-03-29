@@ -1,17 +1,27 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useGameState } from '@/hooks/useGameState';
 import { fetchQuestions } from '@/lib/trivia';
 import { CountryFlag } from '@/components/CountryFlag';
 import { GlobeSpinner } from '@/components/GlobeSpinner';
 import { playMatchFound, playClick, playMusicMatchmaking } from '@/lib/sounds';
 import { SpaceBackground } from '@/components/SpaceBackground';
+import type { GameMode } from '@/hooks/useGameState';
 
 const FAKE_COUNTRIES = ['US', 'GB', 'DE', 'FR', 'JP', 'BR', 'IN', 'CA', 'AU', 'KR', 'MX', 'ES', 'IT', 'NL', 'SE'];
 
+const GAME_ROUTES: Record<GameMode, string> = {
+  trivia: '/duel',
+  tictactoe: '/tictactoe',
+  wordscramble: '/duel',
+  hangman: '/duel',
+};
+
 export default function MatchmakingScreen() {
   const navigate = useNavigate();
-  const { playerId, countryCode, setRoom, setQuestions, reset } = useGameState();
+  const location = useLocation();
+  const gameId = ((location.state as any)?.gameId || 'trivia') as GameMode;
+  const { playerId, countryCode, setRoom, setQuestions, setGameMode, reset } = useGameState();
   const [status, setStatus] = useState<'searching' | 'found'>('searching');
   const [opponentCountry, setOpponentCountry] = useState('');
   const [countdown, setCountdown] = useState(3);
@@ -20,19 +30,21 @@ export default function MatchmakingScreen() {
   useEffect(() => {
     if (!playerId) { navigate('/'); return; }
     playMusicMatchmaking();
+    setGameMode(gameId);
     simulateMatchmaking();
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
   async function simulateMatchmaking() {
-    const questions = await fetchQuestions();
+    // Only fetch trivia questions for trivia mode
+    const questions = gameId === 'trivia' ? await fetchQuestions() : [];
     const oppCountry = FAKE_COUNTRIES[Math.floor(Math.random() * FAKE_COUNTRIES.length)];
     timerRef.current = setTimeout(() => {
       const roomId = crypto.randomUUID();
       const opponentId = crypto.randomUUID();
       setOpponentCountry(oppCountry);
       setRoom(roomId, opponentId, oppCountry);
-      setQuestions(questions);
+      if (questions.length) setQuestions(questions);
       setStatus('found');
       playMatchFound();
       let count = 3;
@@ -40,7 +52,7 @@ export default function MatchmakingScreen() {
       const interval = setInterval(() => {
         count--;
         setCountdown(count);
-        if (count <= 0) { clearInterval(interval); navigate('/duel'); }
+        if (count <= 0) { clearInterval(interval); navigate(GAME_ROUTES[gameId]); }
       }, 1000);
     }, 3000);
   }

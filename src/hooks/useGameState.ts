@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { TriviaQuestion } from '@/lib/trivia';
 
+export type GameMode = 'trivia' | 'tictactoe' | 'wordscramble' | 'hangman';
+
 interface GameState {
   // Player
   playerId: string | null;
@@ -13,6 +15,7 @@ interface GameState {
   roomId: string | null;
   opponentId: string | null;
   opponentCountry: string;
+  gameMode: GameMode;
 
   // Duel
   questions: TriviaQuestion[];
@@ -31,6 +34,7 @@ interface GameState {
   // Actions
   setPlayer: (data: { playerId: string; userId: string; countryCode: string; username: string; xp: number }) => void;
   setRoom: (roomId: string, opponentId: string | null, opponentCountry: string) => void;
+  setGameMode: (mode: GameMode) => void;
   setQuestions: (questions: TriviaQuestion[]) => void;
   submitAnswer: (index: number, answer: string | null) => void;
   setOpponentAnswered: (index: number) => void;
@@ -39,6 +43,7 @@ interface GameState {
   setDuelPhase: (phase: GameState['duelPhase']) => void;
   setTimeLeft: (t: number) => void;
   setResult: (result: 'win' | 'loss' | 'draw', xpEarned: number) => void;
+  setScores: (my: number, opp: number) => void;
   reset: () => void;
 }
 
@@ -46,6 +51,7 @@ const initialDuelState = {
   roomId: null,
   opponentId: null,
   opponentCountry: 'UN',
+  gameMode: 'trivia' as GameMode,
   questions: [],
   currentQuestion: 0,
   myScore: 0,
@@ -70,6 +76,8 @@ export const useGameState = create<GameState>((set) => ({
 
   setRoom: (roomId, opponentId, opponentCountry) =>
     set({ roomId, opponentId, opponentCountry }),
+
+  setGameMode: (gameMode) => set({ gameMode }),
 
   setQuestions: (questions) => set({ questions }),
 
@@ -102,6 +110,8 @@ export const useGameState = create<GameState>((set) => ({
   setTimeLeft: (timeLeft) => set({ timeLeft }),
 
   setResult: (result, xpEarned) => set({ result, xpEarned }),
+
+  setScores: (myScore, opponentScore) => set({ myScore, opponentScore }),
 
   reset: () => set(initialDuelState),
 }));
