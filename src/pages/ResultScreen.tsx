@@ -10,7 +10,7 @@ import { SpaceBackground } from '@/components/SpaceBackground';
 
 export default function ResultScreen() {
   const navigate = useNavigate();
-  const { result, xpEarned, myScore, opponentScore, countryCode, opponentCountry, xp, username, reset } = useGameState();
+  const { result, xpEarned, myScore, opponentScore, countryCode, opponentCountry, xp, username, gameMode, reset } = useGameState();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
