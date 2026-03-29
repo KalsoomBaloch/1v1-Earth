@@ -42,7 +42,7 @@ export default function ResultScreen() {
 
   const config = result ? resultConfig[result] : resultConfig.draw;
 
-  function handleRematch() { playClick(); reset(); navigate('/matchmaking'); }
+  function handleRematch() { playClick(); const mode = gameMode; reset(); navigate('/matchmaking', { state: { gameId: mode } }); }
   function handleNewOpponent() { playClick(); reset(); navigate('/'); }
 
   function handleShare() {
