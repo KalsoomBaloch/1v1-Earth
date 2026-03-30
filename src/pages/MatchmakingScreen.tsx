@@ -14,7 +14,7 @@ const GAME_ROUTES: Record<GameMode, string> = {
   trivia: '/duel',
   tictactoe: '/tictactoe',
   wordscramble: '/wordscramble',
-  hangman: '/duel',
+  hangman: '/hangman',
 };
 
 export default function MatchmakingScreen() {
