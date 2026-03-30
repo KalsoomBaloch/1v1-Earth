@@ -13,7 +13,7 @@ const FAKE_COUNTRIES = ['US', 'GB', 'DE', 'FR', 'JP', 'BR', 'IN', 'CA', 'AU', 'K
 const GAME_ROUTES: Record<GameMode, string> = {
   trivia: '/duel',
   tictactoe: '/tictactoe',
-  wordscramble: '/duel',
+  wordscramble: '/wordscramble',
   hangman: '/duel',
 };
 
