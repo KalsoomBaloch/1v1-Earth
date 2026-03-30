@@ -9,6 +9,7 @@ import MatchmakingScreen from "./pages/MatchmakingScreen";
 import DuelScreen from "./pages/DuelScreen";
 import TicTacToeScreen from "./pages/TicTacToeScreen";
 import WordScrambleScreen from "./pages/WordScrambleScreen";
+import HangmanScreen from "./pages/HangmanScreen";
 import ResultScreen from "./pages/ResultScreen";
 import LeaderboardScreen from "./pages/LeaderboardScreen";
 import ProfileScreen from "./pages/ProfileScreen";
