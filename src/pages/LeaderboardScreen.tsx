@@ -14,19 +14,7 @@ interface LeaderboardEntry {
 function loadLeaderboard(): LeaderboardEntry[] {
   const raw = localStorage.getItem('leaderboard_data');
   const lb: Record<string, { wins: number; losses: number }> = raw ? JSON.parse(raw) : {};
-  const defaults: Record<string, { wins: number; losses: number }> = {
-    US: { wins: 142, losses: 58 }, GB: { wins: 98, losses: 42 }, DE: { wins: 87, losses: 39 },
-    JP: { wins: 76, losses: 34 }, BR: { wins: 65, losses: 30 }, FR: { wins: 54, losses: 26 },
-    IN: { wins: 48, losses: 22 }, CA: { wins: 41, losses: 19 }, AU: { wins: 35, losses: 15 },
-    KR: { wins: 29, losses: 11 },
-  };
-  const merged: Record<string, { wins: number; losses: number }> = {};
-  for (const [code, val] of Object.entries(defaults)) merged[code] = { ...val };
-  for (const [code, val] of Object.entries(lb)) {
-    if (merged[code]) { merged[code].wins += val.wins; merged[code].losses += val.losses; }
-    else merged[code] = { ...val };
-  }
-  return Object.entries(merged)
+  return Object.entries(lb)
     .map(([country_code, { wins, losses }]) => ({ country_code, wins, losses, total: wins + losses }))
     .sort((a, b) => b.wins - a.wins);
 }
