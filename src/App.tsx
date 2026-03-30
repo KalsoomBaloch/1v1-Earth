@@ -28,6 +28,7 @@ const App = () => (
           <Route path="/matchmaking" element={<MatchmakingScreen />} />
           <Route path="/duel" element={<DuelScreen />} />
           <Route path="/tictactoe" element={<TicTacToeScreen />} />
+          <Route path="/wordscramble" element={<WordScrambleScreen />} />
           <Route path="/result" element={<ResultScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
