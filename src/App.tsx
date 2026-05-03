@@ -10,6 +10,8 @@ import DuelScreen from "./pages/DuelScreen";
 import TicTacToeScreen from "./pages/TicTacToeScreen";
 import WordScrambleScreen from "./pages/WordScrambleScreen";
 import HangmanScreen from "./pages/HangmanScreen";
+import EmojiGuessScreen from "./pages/EmojiGuessScreen";
+import ChessScreen from "./pages/ChessScreen";
 import ResultScreen from "./pages/ResultScreen";
 import LeaderboardScreen from "./pages/LeaderboardScreen";
 import ProfileScreen from "./pages/ProfileScreen";
@@ -31,6 +33,8 @@ const App = () => (
           <Route path="/tictactoe" element={<TicTacToeScreen />} />
           <Route path="/wordscramble" element={<WordScrambleScreen />} />
           <Route path="/hangman" element={<HangmanScreen />} />
+          <Route path="/emojiguess" element={<EmojiGuessScreen />} />
+          <Route path="/chess" element={<ChessScreen />} />
           <Route path="/result" element={<ResultScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
