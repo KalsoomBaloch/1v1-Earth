@@ -10,6 +10,8 @@ const GAMES = [
   { id: 'tictactoe', icon: '⭕', name: 'Tic Tac Toe', desc: 'Classic strategy', accent: '271 91% 65%', accentHex: '#a855f7' },
   { id: 'wordscramble', icon: '📝', name: 'Word Scramble', desc: 'Unscramble fastest', accent: '142 71% 45%', accentHex: '#22c55e' },
   { id: 'hangman', icon: '💀', name: 'Hangman', desc: 'Guess the word', accent: '25 95% 53%', accentHex: '#f97316' },
+  { id: 'emojiguess', icon: '🎭', name: 'Emoji Guess', desc: 'Decode the emojis', accent: '330 90% 60%', accentHex: '#f43f8e' },
+  { id: 'chess', icon: '♟️', name: 'Chess', desc: 'Ultimate strategy', accent: '45 95% 55%', accentHex: '#eab308' },
 ];
 
 export default function HomeScreen() {
