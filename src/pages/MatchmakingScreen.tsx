@@ -15,6 +15,8 @@ const GAME_ROUTES: Record<GameMode, string> = {
   tictactoe: '/tictactoe',
   wordscramble: '/wordscramble',
   hangman: '/hangman',
+  emojiguess: '/emojiguess',
+  chess: '/chess',
 };
 
 export default function MatchmakingScreen() {
