@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { TriviaQuestion } from '@/lib/trivia';
 
-export type GameMode = 'trivia' | 'tictactoe' | 'wordscramble' | 'hangman';
+export type GameMode = 'trivia' | 'tictactoe' | 'wordscramble' | 'hangman' | 'emojiguess' | 'chess';
 
 interface GameState {
   // Player
